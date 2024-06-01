@@ -41,7 +41,6 @@ New-AzVm `
 -SecurityGroupName $networkSecurityGroupName `
 -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
-
 Set-AzVMExtension `
 -ResourceGroupName $resourceGroupName `
 -VMName $vmName `

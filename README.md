@@ -61,16 +61,16 @@ If you are a Windows user, before running this command, please also run the foll
 In this task, you will need to write and run a Powershell script, which deploys a virtual machines and uses custom script VM extention to deploy a web app:  
 
 1. Write your script code to the file `task.ps1` in this repository:
+    
+    - In script, you should assume that you are already logged in to Azure and using correct subscription (don't use commands 'Connect-AzAccount' and 'Set-AzContext', if needed - just run them on your computer before running the script). 
 
-    - In script, you should assume that you are already logged in to Azure and using correct subscription (don't use commands 'Connect-AzAccount' and 'Set-AzContext', if needed - just run them on your computer before running the script).
+    - Script already have code, which deploys a VM. Update the code so it will deploy a web app from this repo using a custom script VM extention. 
 
-    - Script already have code, which deploys a VM. Update the code so it will deploy a web app from this repo using a custom script VM extention.
-
-    - To deploy an extention, use [Set-AzVMExtention](https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/features-linux?tabs=azure-powershell#azure-powershell-1) comandlet.
+    - To deploy an extention, use [Set-AzVMExtention](https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/features-linux?tabs=azure-powershell#azure-powershell-1) comandlet. 
 
     - Extention should run a script `install-app.sh`, which should be loaded from your fork of this repo. In your for, the script will be available by the URL: `https://raw.githubusercontent.com/<your-github-username>/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh`
 
-    - Make sure to review and update script `install-app.sh` - it should clone your fork of this repo to the VM. Take a note, that as `install-app.sh` will be downloaded by your VM from the GitHub, you need to commit and push changes to it before running the Powershell code which deploys the extention.
+    - Make sure to review and update script `install-app.sh` - it should clone your fork of this repo to the VM. Take a note, that as `install-app.sh` will be downloaded by your VM from the GitHub, you need to commit and push changes to it before running the Powershell code which deploys the extention. 
 
 2. When script is ready, run it to deploy resources to your subcription. Make sure that script is working without errors, and that application is available on port 8080 after you run the script. To verify that web application is running, open in a web browser the following URL: `http://<your-public-ip-DNS-name>:8080`.
 
@@ -78,6 +78,6 @@ In this task, you will need to write and run a Powershell script, which deploys 
 
 4. Test yourself using the script `scripts/validate-artifacts.ps1`.
 
-5. Make sure that changes to both `task.ps1` and `result.json` are commited to the repo, and sumbit the solution for a review.
+5. Make sure that changes to both `task.ps1` and `result.json` are commited to the repo, and sumbit the solution for a review. 
 
-6. When solution is validated, delete resources you deployed with the powershell script - you won't need them for the next tasks.
+6. When solution is validated, delete resources you deployed with the powershell script - you won't need them for the next tasks. 
