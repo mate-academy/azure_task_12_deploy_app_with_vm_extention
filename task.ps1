@@ -41,7 +41,7 @@ New-AzVm `
 -PublicIpAddressName $publicIpAddressName
 
 # ↓↓↓ Write your code here ↓↓↓
-$extensionName = "customScriptExtension"
+$extensionName = "CustomScriptExtension"
 $scriptUri = "https://raw.githubusercontent.com/gaupt/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
 
 Write-Host "Adding custom script extension $extensionName to the VM ..."
@@ -49,9 +49,9 @@ Set-AzVMExtension
 -ResourceGroupName $resourceGroupName `
 -VMName $vmName `
 -Name $extensionName `
--Publisher Microsoft.Azure.Extensions `
--ExtensionType CustomScript `
+-Publisher "Microsoft.Azure.Extensions" `
+-ExtensionType "CustomScript" `
 -TypeHandlerVersion 2.0 `
--Settings @{ "fileUris" = @($scriptUri); "commandToExecute" = "./install-app.sh" }
-
+#-Settings @{ "fileUris" = @($scriptUri); "commandToExecute" = "./install-app.sh" }
+- Settings (ConvertTo-Json $publicSettings)
 Write-Host "Deployment complete. VM $vmName is set up with custom script extension."
