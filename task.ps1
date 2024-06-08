@@ -6,7 +6,7 @@ $subnetName = "default"
 $vnetAddressPrefix = "10.0.0.0/16"
 $subnetAddressPrefix = "10.0.0.0/24"
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "C:\Users\ipppk\.ssh\id_rsa.pub" -Raw
+$sshKeyPublicKey = Get-Content "C:\Users\ipppk\.ssh\id_rsa.pub"
 $publicIpAddressName = "linuxboxpip"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
@@ -45,6 +45,8 @@ New-AzVm `
 
 $extensionName = "installAppExtension"
 $scriptUri = "https://raw.githubusercontent.com/ILyakhova/azure_task_12_deploy_app_with_vm_extention/develop/install-app.sh"
+
+Write-Host "Creating an Extension ..."
 Set-AzVMExtension `
 -ResourceGroupName $resourceGroupName `
 -VMName $vmName `
