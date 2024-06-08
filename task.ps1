@@ -36,14 +36,14 @@ $nic = New-AzNetworkInterface -ResourceGroupName $resourceGroupName -Location $l
 
 Write-Host "Creating VM $vmName ..."
 $cred = New-Object System.Management.Automation.PSCredential ("azureuser", (ConvertTo-SecureString "placeholderpassword" -AsPlainText -Force))
-$vmConfig = New-AzVMConfig -VMName $vmName -VMSize $vmSize | `
+$vmConfig = New-AzVmConfig -VMName $vmName -VMSize $vmSize | `
     Set-AzVMOperatingSystem -Linux -ComputerName $vmName -Credential $cred -DisablePasswordAuthentication | `
     Set-AzVMSourceImage -PublisherName "Canonical" -Offer "0001-com-ubuntu-server-jammy" -Skus "22_04-lts-gen2" -Version "latest" | `
     Add-AzVMNetworkInterface -Id $nic.Id | `
     Add-AzVMSSHPublicKey -KeyData $sshKeyPublicKey -Path "/home/azureuser/.ssh/authorized_keys"
 
 Write-Host "Starting VM creation..."
-$vm = New-AzVM -ResourceGroupName $resourceGroupName -Location $location -VM $vmConfig
+$vm = New-AzVm -ResourceGroupName $resourceGroupName -Location $location -VM $vmConfig
 
 Write-Host "Waiting for VM to be fully provisioned..."
 Start-Sleep -Seconds 60
