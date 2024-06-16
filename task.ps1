@@ -53,6 +53,7 @@ Set-AzVMExtension `
 -Publisher "Microsoft.Azure.Extensions" `
 -ExtensionType "CustomScript" `
 -TypeHandlerVersion 2.0 `
--Settings @{ "fileUris" = @($scriptUri); "commandToExecute" = "./install-app.sh" }
-#-Settings (ConvertTo-Json $publicSettings)
+-Settings @{ "fileUris" = @($scriptUri)
+              "commandToExecute" = "sh install-app.sh" }
+# #-Settings (ConvertTo-Json $publicSettings)
 Write-Host "Deployment complete. VM $vmName is set up with custom script extension."
