@@ -42,17 +42,20 @@ New-AzVm `
 
 # ↓↓↓ Write your code here ↓↓↓
 
-$Params = @{
-    ResourceGroupName  = $resourceGroupName
-    VMName             = $vmName
-    Name               = "CustomScriptFor${vmName}"
-    Publisher          = "Microsoft.Azure.Extensions"
-    ExtensionType      = "CustomScript"
-    TypeHandlerVersion = "2.1"
-    ProtectedSettings  = @{
-        fileUris = @("https://raw.githubusercontent.com/yaaszp/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh")
-        commandToExecute = "sh install-app.sh"
-    }
+$extensionName = "installAppExtension"
+$scriptUri = "https://raw.githubusercontent.com/yaaszp/azure_task_12_deploy_app_with_vm_extention/develop/install-app.sh"
+
+Write-Host "Creating an Extension ..."
+Set-AzVMExtension `
+-ResourceGroupName $resourceGroupName `
+-VMName $vmName `
+-Name $extensionName `
+-ExtensionType "CustomScript" `
+-Publisher "Microsoft.Azure.Extensions" `
+-TypeHandlerVersion "2.0" `
+-Settings @{
+    "fileUris" = @($scriptUri)
+    "commandToExecute" = "sh install-app.sh"
 }
 
-Set-AzVMExtension @Params
+
