@@ -40,7 +40,7 @@ New-AzVm `
 -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
 $extensionName = 'installationExtension'
-$uri = 'https://raw.githubusercontent.com/cth-usq/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh'
+$uri = 'https://github.com/cth-usq/azure_task_12_deploy_app_with_vm_extention/blob/develop/install-app.sh'
 
 Write-Host "Adding an $extensionName."
 $Params = @{
@@ -50,7 +50,7 @@ $Params = @{
   Publisher          = 'Microsoft.Azure.Extensions'
   ExtensionType      = 'CustomScript'
   TypeHandlerVersion = '2.1'
-  Settings          = @{fileUris = @($uri); commandToExecute = 'sh ./install-app.sh'}
+  Settings          = @{fileUris = @($uri); commandToExecute = './install-app.sh'}
 }
 Set-AzVMExtension @Params
 
