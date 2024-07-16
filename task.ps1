@@ -41,6 +41,11 @@ New-AzVm `
 
 $extensionName = 'installationExtension'
 $uri = 'https://github.com/cth-usq/azure_task_12_deploy_app_with_vm_extention/blob/develop/install-app.sh'
+$Settings = @{
+  "fileUris" = @($uri)
+  "commandToExecute" = "sh install-app.sh"
+}
+
 
 Write-Host "Adding an $extensionName."
 Set-AzVMExtension `
@@ -50,9 +55,6 @@ Set-AzVMExtension `
 -ExtensionType "CustomScript" `
 -Publisher "Microsoft.Azure.Extensions" `
 -TypeHandlerVersion "2.0" `
--Settings @{
-    "fileUris" = @($uri)
-    "commandToExecute" = "sh install-app.sh"
-}
+-Settings (ConvertTo-Json $Settings)
 
 Write-Host "VM $vmName creating with custom extension."
