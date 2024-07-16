@@ -50,7 +50,7 @@ $Params = @{
   Publisher          = 'Microsoft.Azure.Extensions'
   ExtensionType      = 'CustomScript'
   TypeHandlerVersion = '2.1'
-  Settings          = @{fileUris = @($uri); commandToExecute = './install-app.sh'}
+  Settings          = @{fileUris = @($uri); commandToExecute = 'sh ./install-app.sh'}
 }
 Set-AzVMExtension @Params
 
