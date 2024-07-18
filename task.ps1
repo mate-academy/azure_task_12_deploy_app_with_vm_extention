@@ -6,7 +6,7 @@ $subnetName = "default"
 $vnetAddressPrefix = "10.0.0.0/16"
 $subnetAddressPrefix = "10.0.0.0/24"
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
+$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub"
 $publicIpAddressName = "linuxboxpip"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
@@ -39,4 +39,21 @@ New-AzVm `
 -SecurityGroupName $networkSecurityGroupName `
 -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
-# ↓↓↓ Write your code here ↓↓↓
+$extensionName = 'installationExtension'
+$uri = 'https://raw.githubusercontent.com/cth-usq/azure_task_12_deploy_app_with_vm_extention/develop/install-app.sh'
+$Settings = @{
+  "fileUris" = @($uri)
+  "commandToExecute" = "sh install-app.sh"
+}
+
+Write-Host "Adding an $extensionName."
+Set-AzVMExtension `
+-ResourceGroupName $resourceGroupName `
+-VMName $vmName `
+-Name $extensionName `
+-ExtensionType "CustomScript" `
+-Publisher "Microsoft.Azure.Extensions" `
+-TypeHandlerVersion "2.0" `
+-Settings $Settings
+
+Write-Host "VM $vmName creating with custom extension."
