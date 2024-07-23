@@ -1,0 +1,13 @@
+DNS Report for matetask1369202553.uksouth.cloudapp.azure.com
+=========================DNS Lookup Result:
+Server:  dns.google Address:  8.8.8.8  Name:    matetask1369202553.uksouth.cloudapp.azure.com Address:  172.166.177.127 
+
+Test Connection Result:
+ -  - ms
+ -  - ms
+ -  - ms
+ -  - ms
+
+Attempting to access: http:///api/
+Web request failed: Cannot bind parameter 'Uri'. Cannot convert value "http:///api/" to type "System.Uri". Error: "Invalid URI: The hostname could not be parsed."
+

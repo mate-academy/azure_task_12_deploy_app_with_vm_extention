@@ -214,20 +214,21 @@ if ($extention.properties.type -eq "CustomScript") {
     throw "Unable to verify the extention type. Please make sure that you are using a VM extention with type 'CustomScript' and try again."
 }
 
-if ($extention.properties.settings.fileUris[0]) { 
-    if (-not $extention.properties.settings.fileUris[0].Contains("https://raw.githubusercontent.com/mate-academy/")) { 
+if ($extention.properties.settings.fileUris[0]) {
+    if (-not $extention.properties.settings.fileUris[0].Contains("https://raw.githubusercontent.com/mate-academy/")) {
         Write-Output "`u{2705} Checked the VM extention script URI - OK."
-    } else { 
+    } else {
         Write-Output `u{1F914}
         throw "Unable to verify the script URL in the extention settings. Please make sure that you are using script from your own fork for the extention and try again."
     }
- } else { 
+ } else {
     Write-Output `u{1F914}
     throw "Unable to verify the script URL in the extention settings. Please make sure that you are setting the script URI when deploying the extention."
 }
 
-$response = (Invoke-WebRequest -Uri "http://$($pip.properties.dnsSettings.fqdn):8080/api/" -ErrorAction SilentlyContinue) 
-if ($response) { 
+
+$response = (Invoke-WebRequest -Uri "http://$($pip.properties.dnsSettings.fqdn):8080/api/" -ErrorAction SilentlyContinue)
+if ($response) {
     Write-Output "`u{2705} Checked if the web application is running - OK"
 } else {
     throw "Unable to get a reponse from the web app. Please make sure that the VM and web application are running and try again."
