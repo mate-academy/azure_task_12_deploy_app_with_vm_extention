@@ -17,7 +17,7 @@
           -Location uksouth (or other location)
       * You would get version output format x.x.x
         use version format x.x
-  3)  This Template is designed for
+  4)  This Template is designed for
         - creating separate NEW Resource Group
         - creating X count of VM's in the X count of AvailabilityCount
           with option to choose between Availability Zone / Set
@@ -30,7 +30,7 @@
               within the Availability Zones
           - As a result of tht ^^ Regular connection from outside internet
               is not available
-  4)  Set preferred settings below:
+  5)  Set preferred settings below:
 #>
 
 # general settings:
