@@ -100,13 +100,13 @@
         "tier": "Regional"
       },
       "properties": {
-        "ipAddress": "172.167.203.85",
+        "ipAddress": "172.167.144.28",
         "publicIPAddressVersion": "IPv4",
         "publicIPAllocationMethod": "Dynamic",
         "idleTimeoutInMinutes": 4,
         "dnsSettings": {
-          "domainNameLabel": "matetask1040148682",
-          "fqdn": "matetask1040148682.uksouth.cloudapp.azure.com"
+          "domainNameLabel": "matetask89194797",
+          "fqdn": "matetask89194797.uksouth.cloudapp.azure.com"
         },
         "ipTags": []
       }
@@ -161,12 +161,12 @@
           },
           "osDisk": {
             "osType": "Linux",
-            "name": "[concat(parameters('virtualMachines_matebox_name'), '_OsDisk_1_ea81ed1f99f444d9bd737810a432152e')]",
+            "name": "[concat(parameters('virtualMachines_matebox_name'), '_disk1_680b34edd1da4878b4b16fbf98bb2a11')]",
             "createOption": "FromImage",
             "caching": "ReadWrite",
             "managedDisk": {
               "storageAccountType": "Premium_LRS",
-              "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_matebox_name'), '_OsDisk_1_ea81ed1f99f444d9bd737810a432152e'))]"
+              "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_matebox_name'), '_disk1_680b34edd1da4878b4b16fbf98bb2a11'))]"
             },
             "deleteOption": "Detach",
             "diskSizeGB": 30
