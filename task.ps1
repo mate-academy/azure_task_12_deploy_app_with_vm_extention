@@ -4,6 +4,19 @@
       Get-Help $Your_CmdLet -Full
   2)  to see available values for specific parameters below use:
       Get-Help $Your_CmdLet -Parameter $Your_Parameter
+  3)  to see the actual latest supported version of the Extension - run:
+      a) for Linux:
+        Get-AzVMExtensionImage `
+          -PublisherName Microsoft.Azure.Extensions `
+          -Type CustomScript `
+          -Location uksouth (or other location)
+      b) fot Windows:
+        Get-AzVMExtensionImage `
+          -PublisherName Microsoft.Compute `
+          -Type CustomScriptExtension `
+          -Location uksouth (or other location)
+      * You would get version output format x.x.x
+        use version format x.x
   3)  This Template is designed for
         - creating separate NEW Resource Group
         - creating X count of VM's in the X count of AvailabilityCount
@@ -22,7 +35,7 @@
 
 # general settings:
 $location =                   "uksouth"
-$resourceGroupName =          "mate-azure-task-11"
+$resourceGroupName =          "mate-azure-task-12"
 
 # Network Security Group settings:
 $networkSecurityGroupName =   "defaultnsg"
@@ -252,4 +265,21 @@ for ($i = 1; $i -le $availabilityCounter; $i++) {
     -Location                 $location `
     -VM                       $vmconfig `
     -SshKeyName               $sshKeyName
+
+  $scriptUrl1 = "https://raw.githubusercontent.com/YegorVolkov/azure_task_12_deploy_app_with_vm_extention/dev/install-app.sh"
+  $commandToExecute1 = "bash install-app.sh"
+
+  Write-Host "Installing Script Extension 'CustomScriptExtension'"
+  Set-AzVMExtension `
+      -ResourceGroupName        $resourceGroupName `
+      -VMName                   $AvailVmName `
+      -Location                 $location `
+      -Name                     "CustomScriptExtension" `
+      -Publisher                "Microsoft.Azure.Extensions" `
+      -ExtensionType            "CustomScript" `
+      -TypeHandlerVersion       "2.1" `
+      -Settings @{
+          "fileUris" =          @($scriptUrl1)
+          "commandToExecute" =  $commandToExecute1
+      }
 }

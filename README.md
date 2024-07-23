@@ -6,7 +6,7 @@ In this task, you will learn how to use VM extension to automate the deployment 
 
 ## Prerequisites
 
-Before completing any task in the module, make sure that you followed all the steps described in the **Environment Setup** topic, in particular: 
+Before completing any task in the module, make sure that you followed all the steps described in the **Environment Setup** topic, in particular:
 
 1. Ensure you have an [Azure](https://azure.microsoft.com/en-us/free/) account and subscription.
 
