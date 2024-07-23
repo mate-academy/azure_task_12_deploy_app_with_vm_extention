@@ -100,13 +100,13 @@
         "tier": "Regional"
       },
       "properties": {
-        "ipAddress": "172.167.138.71",
+        "ipAddress": "172.167.203.85",
         "publicIPAddressVersion": "IPv4",
         "publicIPAllocationMethod": "Dynamic",
         "idleTimeoutInMinutes": 4,
         "dnsSettings": {
-          "domainNameLabel": "matetask700934473",
-          "fqdn": "matetask700934473.uksouth.cloudapp.azure.com"
+          "domainNameLabel": "matetask1040148682",
+          "fqdn": "matetask1040148682.uksouth.cloudapp.azure.com"
         },
         "ipTags": []
       }
@@ -161,12 +161,12 @@
           },
           "osDisk": {
             "osType": "Linux",
-            "name": "[concat(parameters('virtualMachines_matebox_name'), '_disk1_d295bf9cee6e458bbbe7ee672318316d')]",
+            "name": "[concat(parameters('virtualMachines_matebox_name'), '_OsDisk_1_ea81ed1f99f444d9bd737810a432152e')]",
             "createOption": "FromImage",
             "caching": "ReadWrite",
             "managedDisk": {
               "storageAccountType": "Premium_LRS",
-              "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_matebox_name'), '_disk1_d295bf9cee6e458bbbe7ee672318316d'))]"
+              "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_matebox_name'), '_OsDisk_1_ea81ed1f99f444d9bd737810a432152e'))]"
             },
             "deleteOption": "Detach",
             "diskSizeGB": 30
@@ -176,13 +176,13 @@
         },
         "osProfile": {
           "computerName": "[parameters('virtualMachines_matebox_name')]",
-          "adminUsername": "VR89",
+          "adminUsername": "vr89",
           "linuxConfiguration": {
             "disablePasswordAuthentication": true,
             "ssh": {
               "publicKeys": [
                 {
-                  "path": "/home/VR89/.ssh/authorized_keys",
+                  "path": "/home/vr89/.ssh/authorized_keys",
                   "keyData": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOXAzoO4t6d7qUwS/ncUvzOontXtfFNblSLWuSBOgQpY shcherbanvasyl@gmail.com.com\r\n"
                 }
               ]
