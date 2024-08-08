@@ -40,6 +40,7 @@ New-AzVm `
 -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
 # ↓↓↓ Write your code here ↓↓↓
+
 $Params = @{
     ResourceGroupName  = $resourceGroupName
     VMName             = $vmName
