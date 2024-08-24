@@ -6,7 +6,7 @@ $subnetName = "default"
 $vnetAddressPrefix = "10.0.0.0/16"
 $subnetAddressPrefix = "10.0.0.0/24"
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
+$sshKeyPublicKey = Get-Content "./key.txt"
 $publicIpAddressName = "linuxboxpip"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
@@ -29,14 +29,25 @@ New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey 
 New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Basic -AllocationMethod Dynamic -DomainNameLabel $dnsLabel
 
 New-AzVm `
--ResourceGroupName $resourceGroupName `
--Name $vmName `
--Location $location `
--image $vmImage `
--size $vmSize `
--SubnetName $subnetName `
--VirtualNetworkName $virtualNetworkName `
--SecurityGroupName $networkSecurityGroupName `
--SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
+    -ResourceGroupName $resourceGroupName `
+    -Name $vmName `
+    -Location $location `
+    -image $vmImage `
+    -size $vmSize `
+    -SubnetName $subnetName `
+    -VirtualNetworkName $virtualNetworkName `
+    -SecurityGroupName $networkSecurityGroupName `
+    -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
 # ↓↓↓ Write your code here ↓↓↓
+
+$Params = @{
+    ResourceGroupName  = $resourceGroupName
+    VMName             = $vmName
+    Name               = 'CustomScript'
+    Publisher          = 'Microsoft.Azure.Extensions'
+    ExtensionType      = 'CustomScript'
+    TypeHandlerVersion = '2.1'
+    Settings           = @{fileUris = @('https://raw.githubusercontent.com/elfredburger/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh'); commandToExecute = './install-app.sh' }
+}
+Set-AzVMExtension @Params
