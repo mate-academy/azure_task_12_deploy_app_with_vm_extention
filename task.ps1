@@ -6,12 +6,14 @@ $subnetName = "default"
 $vnetAddressPrefix = "10.0.0.0/16"
 $subnetAddressPrefix = "10.0.0.0/24"
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
+$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub"
 $publicIpAddressName = "linuxboxpip"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
 $dnsLabel = "matetask" + (Get-Random -Count 1) 
+$extensionName = "installAppExtension"
+$scriptUri = "https://raw.githubusercontent.com/OKochubei/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -39,4 +41,14 @@ New-AzVm `
 -SecurityGroupName $networkSecurityGroupName `
 -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
-# ↓↓↓ Write your code here ↓↓↓
+Set-AzVMExtension `
+-ResourceGroupName $resourceGroupName `
+-VMName $vmName `
+-Name $extensionName `
+-ExtensionType "CustomScript" `
+-Publisher "Microsoft.Azure.Extensions" `
+-TypeHandlerVersion "2.0" `
+-Settings @{
+    "fileUris" = @($scriptUri)
+    "commandToExecute" = "sh install-app.sh"
+}
