@@ -2,7 +2,7 @@
 
 The script deploys VMs. By updating one script variable, you can deploy as many VMs as needed. However, you must still connect to the VM with SSH and install the app manually. Well, today, we are going to fix it! 
 
-In this task, you will learn how to use VM extension to automate the deployment of your app to the VM. The resulting script will allow you to deploy a VM and install the todo web app to it without any manual actions, only by running the Powershell script. 
+In this task, you will learn how to use VM extension to automate the deployment of your app to the VM. The resulting script will allow you to deploy a VM and install the todo web app to it without any manual actions, only by running the Powershell script.
 
 ## Prerequisites
 
