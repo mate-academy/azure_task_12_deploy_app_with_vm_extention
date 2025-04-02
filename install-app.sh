@@ -16,10 +16,10 @@ sudo mkdir /app
 sudo git clone https://github.com/beliar24/azure_task_12_deploy_app_with_vm_extention.git
 
 # shellcheck disable=SC2232
-sudo cd azure_task_12_deploy_app_with_vm_extention/app/
+sudo cd azure_task_12_deploy_app_with_vm_extention/
 
 # shellcheck disable=SC2035
-sudo cp -r * /app
+sudo cp -r app/* /app
 
 # create a service for the app via systemctl and start the app
 sudo mv /app/todoapp.service /etc/systemd/system/
