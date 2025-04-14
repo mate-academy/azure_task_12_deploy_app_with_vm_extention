@@ -40,3 +40,18 @@ New-AzVm `
 -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
 # ↓↓↓ Write your code here ↓↓↓
+
+$Params = @{
+    ResourceGroupName  = $resourceGroupName
+    VMName             = $vmName
+    Name               = 'CustomScript'
+    Publisher          = 'Microsoft.Azure.Extensions'
+    ExtensionType      = 'CustomScript'
+    TypeHandlerVersion = '2.1'
+    Settings           = @{
+      fileUris         = @('https://raw.githubusercontent.com/efirshey/azure_task_12_deploy_app_with_vm_extention/refs/heads/main/install-app.sh');
+      commandToExecute = './install-app.sh'
+    }
+  }
+  
+  Set-AzVMExtension @Params
