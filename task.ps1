@@ -11,7 +11,10 @@ $publicIpAddressName = "linuxboxpip"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
-$dnsLabel = "matetask" + (Get-Random -Count 1) 
+$dnsLabel = "matetask" + (Get-Random -Count 1)
+$customScript = "CustomScript"
+$publisher = "Microsoft.Azure.Extensions"
+$customScriptVersion = "2.1"
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -37,6 +40,22 @@ New-AzVm `
 -SubnetName $subnetName `
 -VirtualNetworkName $virtualNetworkName `
 -SecurityGroupName $networkSecurityGroupName `
--SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
+-SshKeyName $sshKeyName `
+-PublicIpAddressName $publicIpAddressName
 
-# ↓↓↓ Write your code here ↓↓↓
+
+# Install the Custom Script Extension on the VM
+$Params = @{
+	ResourceGroupName = $resourceGroupName
+	VMName = $vmName
+	Name = $customScript
+	Publisher = $publisher
+	ExtensionType = $customScript
+	TypeHandlerVersion = $customScriptVersion
+	ProtectedSettings = @{
+		fileUris = @("https://raw.githubusercontent.com/Volodymyrdv/azure_task_12_deploy_app_with_vm_extention/develop/install-app.sh")
+		commandToExecute = "./install-app.sh"
+	}
+}
+
+Set-AzVMExtension @Params
