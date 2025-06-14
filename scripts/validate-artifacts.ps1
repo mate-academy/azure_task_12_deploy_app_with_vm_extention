@@ -196,7 +196,7 @@ if ($virtualMachine.properties.hardwareProfile.vmSize -eq "Standard_B1s") {
 
 $extention = ( $TemplateObject.resources | Where-Object -Property type -EQ "Microsoft.Compute/virtualMachines/extensions" )
 if ($extention) {
-    if ($extention.name.Count -eq 1) { 
+    if ($extention.name.Count -eq 1) {
         Write-Output "`u{2705} Checked if VM extention resource exists - OK."
     }  else { 
         Write-Output `u{1F914}
@@ -207,21 +207,21 @@ if ($extention) {
     throw "Unable to find VM extention resource in the task resource group. Please make sure that your script creates a VM extention and try again."
 }
 
-if ($extention.properties.type -eq "CustomScript") { 
+if ($extention.properties.type -eq "CustomScript") {
     Write-Output "`u{2705} Checked the VM extention type - OK."
 } else { 
     Write-Output `u{1F914}
     throw "Unable to verify the extention type. Please make sure that you are using a VM extention with type 'CustomScript' and try again."
 }
 
-if ($extention.properties.settings.fileUris[0]) { 
-    if (-not $extention.properties.settings.fileUris[0].Contains("https://raw.githubusercontent.com/mate-academy/")) { 
+if ($extention.properties.settings.fileUris[0]) {
+    if (-not $extention.properties.settings.fileUris.Contains("https://raw.githubusercontent.com/mate-academy/")) {
         Write-Output "`u{2705} Checked the VM extention script URI - OK."
     } else { 
         Write-Output `u{1F914}
         throw "Unable to verify the script URL in the extention settings. Please make sure that you are using script from your own fork for the extention and try again."
     }
- } else { 
+} else {
     Write-Output `u{1F914}
     throw "Unable to verify the script URL in the extention settings. Please make sure that you are setting the script URI when deploying the extention."
 }
