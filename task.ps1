@@ -12,7 +12,8 @@ $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
 $dnsLabel = "matetask" + (Get-Random -Count 1)
-$scriptUrl = "https://raw.githubusercontent.com/Yevgene-DP/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
+$githubUser = "Yevgene-DP" # тут свій GitHub username
+$scriptUrl = "https://raw.githubusercontent.com/$githubUser/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
 
 Write-Host "Creating resource group $resourceGroupName..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -58,6 +59,9 @@ Set-AzVMExtension `
     -Publisher "Microsoft.Azure.Extensions" `
     -ExtensionType "CustomScript" `
     -TypeHandlerVersion "2.1" `
-    -Settings @{ "fileUris" = @($scriptUrl); "commandToExecute" = "bash install-app.sh" }
+    -Settings @{ 
+        "fileUris" = @($scriptUrl);
+        "commandToExecute" = "GITHUB_USER=$githubUser bash install-app.sh"
+    }
 
 Write-Host "Deployment complete. Access the app at: http://$dnsLabel.$location.cloudapp.azure.com:8080"
