@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
-REPO="https://github.com/Yevgene-DP/azure_task_12_deploy_app_with_vm_extention.git"
+# GitHub username передається через PowerShell
+GITHUB_USER="${GITHUB_USER:-Yevgene-DP}"
+REPO="https://github.com/${GITHUB_USER}/azure_task_12_deploy_app_with_vm_extention.git"
 APP_DIR="/opt/azapp"
 PORT=8080
 
