@@ -17,7 +17,6 @@ git clone https://github.com/betterthink/azure_task_12_deploy_app_with_vm_extent
 cp -r azure_task_12_deploy_app_with_vm_extention/app/* /app
 
 # create a service for the app via systemctl and start the app
-chmod +x /app/todoapp.service
 mv /app/todoapp.service /etc/systemd/system/
 systemctl daemon-reload
 systemctl start todoapp
