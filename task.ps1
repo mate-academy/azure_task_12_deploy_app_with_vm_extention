@@ -1,67 +1,62 @@
-$location = "uksouth"
-$resourceGroupName = "mate-azure-task-12"
-$networkSecurityGroupName = "defaultnsg"
-$virtualNetworkName = "vnet"
-$subnetName = "default"
-$vnetAddressPrefix = "10.0.0.0/16"
-$subnetAddressPrefix = "10.0.0.0/24"
-$sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub"
-$publicIpAddressName = "linuxboxpip"
-$vmName = "matebox"
-$vmImage = "Ubuntu2204"
-$vmSize = "Standard_B1s"
-$dnsLabel = "matetask" + (Get-Random -Count 1)
-$githubUser = "Yevgene-DP" # тут свій GitHub username
-$scriptUrl = "https://raw.githubusercontent.com/$githubUser/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
+# Налаштування групи ресурсів та віртуальної машини
+$resourceGroupName = "mateAzureTask12"
+$location = "westeurope"
+$vmName = "mateWebAppVM"
+$publicIpDnsName = "matewebappvm" + (Get-Random -Minimum 1000 -Maximum 9999)
 
-Write-Host "Creating resource group $resourceGroupName..."
+# 1. Створення групи ресурсів
 New-AzResourceGroup -Name $resourceGroupName -Location $location
 
-Write-Host "Creating NSG with SSH and HTTP rules..."
-$nsgRuleSSH = New-AzNetworkSecurityRuleConfig -Name SSH -Protocol Tcp -Direction Inbound -Priority 1001 `
-    -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 22 -Access Allow
-$nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP -Protocol Tcp -Direction Inbound -Priority 1002 `
-    -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 8080 -Access Allow
-New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName `
-    -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
+# 2. Налаштування підмережі
+$subnetConfig = New-AzVirtualNetworkSubnetConfig -Name "mySubnet" -AddressPrefix 192.168.1.0/24
 
-Write-Host "Creating VNet and subnet..."
-$subnet = New-AzVirtualNetworkSubnetConfig -Name $subnetName -AddressPrefix $subnetAddressPrefix
-New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroupName `
-    -Location $location -AddressPrefix $vnetAddressPrefix -Subnet $subnet
+# 3. Створення віртуальної мережі
+$vnet = New-AzVirtualNetwork -ResourceGroupName $resourceGroupName -Location $location `
+  -Name "myVNET" -AddressPrefix 192.168.0.0/16 -Subnet $subnetConfig
 
-Write-Host "Creating SSH key resource..."
-New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey $sshKeyPublicKey
+# 4. Створення публічної IP-адреси
+$pip = New-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Location $location `
+  -Name "myPublicIP" -AllocationMethod Dynamic -DomainNameLabel $publicIpDnsName
 
-Write-Host "Creating Standard public IP..."
-New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location `
-    -Sku Standard -AllocationMethod Static -DomainNameLabel $dnsLabel
+# 5. Налаштування групи безпеки мережі (відкриваємо порт 8080)
+$nsgRule = New-AzNetworkSecurityRuleConfig -Name "myNetworkSecurityGroupRuleWeb" -Protocol Tcp `
+  -Direction Inbound -Priority 1000 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * `
+  -DestinationPortRange 8080 -Access Allow
 
-Write-Host "Deploying VM..."
-New-AzVM `
-    -ResourceGroupName $resourceGroupName `
-    -Name $vmName `
-    -Location $location `
-    -Image $vmImage `
-    -Size $vmSize `
-    -SubnetName $subnetName `
-    -VirtualNetworkName $virtualNetworkName `
-    -SecurityGroupName $networkSecurityGroupName `
-    -SshKeyName $sshKeyName `
-    -PublicIpAddressName $publicIpAddressName
+$nsg = New-AzNetworkSecurityGroup -ResourceGroupName $resourceGroupName -Location $location `
+  -Name "myNetworkSecurityGroup" -SecurityRules $nsgRule
 
-Write-Host "Adding VM Extension to install the app..."
-Set-AzVMExtension `
-    -ResourceGroupName $resourceGroupName `
-    -VMName $vmName `
-    -Name "installapp" `
-    -Publisher "Microsoft.Azure.Extensions" `
-    -ExtensionType "CustomScript" `
-    -TypeHandlerVersion "2.1" `
-    -Settings @{ 
-        "fileUris" = @($scriptUrl);
-        "commandToExecute" = "GITHUB_USER=$githubUser bash install-app.sh"
-    }
+# 6. Налаштування IP-конфігурації
+$ipConfig = New-AzNetworkInterfaceIpConfig -Name "myIpConfig" -Subnet $vnet.Subnets[0] `
+  -PublicIpAddress $pip -PrivateIpAddressVersion IPv4
 
-Write-Host "Deployment complete. Access the app at: http://$dnsLabel.$location.cloudapp.azure.com:8080"
+# 7. Створення мережевого інтерфейсу
+$nic = New-AzNetworkInterface -Name "myNic" -ResourceGroupName $resourceGroupName `
+  -Location $location -IpConfiguration $ipConfig -NetworkSecurityGroup $nsg
+
+# 8. Налаштування облікових даних для Linux (логін: azureuser, пароль: Azure123456!)
+$securePassword = ConvertTo-SecureString "Azure123456!" -AsPlainText -Force
+$cred = New-Object System.Management.Automation.PSCredential ("azureuser", $securePassword)
+
+# 9. Налаштування конфігурації віртуальної машини (Ubuntu 18.04 LTS)
+$vmConfig = New-AzVMConfig -VMName $vmName -VMSize "Standard_B1s" | `
+  Set-AzVMOperatingSystem -Linux -ComputerName $vmName -Credential $cred | `
+  Set-AzVMSourceImage -PublisherName "Canonical" -Offer "UbuntuServer" -Skus "18.04-LTS" -Version "latest" | `
+  Add-AzVMNetworkInterface -Id $nic.Id
+
+# 10. Створення віртуальної машини
+New-AzVM -ResourceGroupName $resourceGroupName -Location $location -VM $vmConfig
+
+# 11. Встановлення веб-додатку через Custom Script Extension
+Set-AzVMExtension -ResourceGroupName $resourceGroupName -VMName $vmName -Name "webAppDeployment" `
+  -Publisher "Microsoft.Azure.Extensions" -ExtensionType "CustomScript" -TypeHandlerVersion "2.0" `
+  -SettingString '{
+    "fileUris": ["https://raw.githubusercontent.com/Yevgene-DP/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"],
+    "commandToExecute": "bash install-app.sh"
+  }'
+
+# 12. Отримання публічної IP-адреси
+$ip = Get-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Name "myPublicIP"
+
+Write-Output "Додаток успішно розгорнуто!"
+Write-Output "Доступ до додатку: http://$($ip.DnsSettings.Fqdn):8080"
