@@ -13,7 +13,7 @@ apt-get install python3-pip -yq
 # Create a directory for the app and download the files. 
 mkdir /app
 cd /tmp
-git clone https://github.com/zave52/azure_task_12_deploy_app_with_vm_extention.git
+git clone -b develop https://github.com/zave52/azure_task_12_deploy_app_with_vm_extention.git
 cp -r azure_task_12_deploy_app_with_vm_extention/app/* /app/
 
 # create a service for the app via systemctl and start the app
