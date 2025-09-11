@@ -14,10 +14,10 @@
     "virtualNetworks_vnet_name": {
       "type": "String"
     },
-    "virtualMachines_matebox_name": {
+    "virtualMachines_matebox1_name": {
       "type": "String"
     },
-    "networkInterfaces_matebox_name": {
+    "networkInterfaces_matebox1_name": {
       "type": "String"
     },
     "storageAccounts_storageac88_name": {
@@ -26,7 +26,7 @@
     "sshPublicKeys_linuxboxsshkey_name": {
       "type": "String"
     },
-    "publicIPAddresses_linuxboxpip_name": {
+    "publicIPAddresses_linuxboxpip1_name": {
       "type": "String"
     },
     "networkSecurityGroups_defaultnsg_name": {
@@ -96,20 +96,20 @@
     {
       "type": "Microsoft.Network/publicIPAddresses",
       "apiVersion": "2024-07-01",
-      "name": "[parameters('publicIPAddresses_linuxboxpip_name')]",
+      "name": "[parameters('publicIPAddresses_linuxboxpip1_name')]",
       "location": "uksouth",
       "sku": {
         "name": "Standard",
         "tier": "Regional"
       },
       "properties": {
-        "ipAddress": "20.68.36.134",
+        "ipAddress": "4.234.109.245",
         "publicIPAddressVersion": "IPv4",
         "publicIPAllocationMethod": "Static",
         "idleTimeoutInMinutes": 4,
         "dnsSettings": {
-          "domainNameLabel": "matetask1781238256",
-          "fqdn": "matetask1781238256.uksouth.cloudapp.azure.com"
+          "domainNameLabel": "matetask1665472867",
+          "fqdn": "matetask1665472867.uksouth.cloudapp.azure.com"
         },
         "ipTags": [],
         "ddosSettings": {
@@ -193,10 +193,10 @@
     {
       "type": "Microsoft.Compute/virtualMachines",
       "apiVersion": "2024-11-01",
-      "name": "[parameters('virtualMachines_matebox_name')]",
+      "name": "[parameters('virtualMachines_matebox1_name')]",
       "location": "uksouth",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_matebox_name'))]"
+        "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_matebox1_name'))]"
       ],
       "properties": {
         "hardwareProfile": {
@@ -211,12 +211,12 @@
           },
           "osDisk": {
             "osType": "Linux",
-            "name": "[concat(parameters('virtualMachines_matebox_name'), '_OsDisk_1_c66db2f377944580be1f72f2dcfe80b3')]",
+            "name": "[concat(parameters('virtualMachines_matebox1_name'), '_OsDisk_1_16c015190c7d421fb32f33faa20c9766')]",
             "createOption": "FromImage",
             "caching": "ReadWrite",
             "managedDisk": {
               "storageAccountType": "Premium_LRS",
-              "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_matebox_name'), '_OsDisk_1_c66db2f377944580be1f72f2dcfe80b3'))]"
+              "id": "[resourceId('Microsoft.Compute/disks', concat(parameters('virtualMachines_matebox1_name'), '_OsDisk_1_16c015190c7d421fb32f33faa20c9766'))]"
             },
             "deleteOption": "Detach",
             "diskSizeGB": 30
@@ -226,7 +226,7 @@
           "alignRegionalDisksToVMZone": false
         },
         "osProfile": {
-          "computerName": "[parameters('virtualMachines_matebox_name')]",
+          "computerName": "[parameters('virtualMachines_matebox1_name')]",
           "adminUsername": "azureuser",
           "linuxConfiguration": {
             "disablePasswordAuthentication": true,
@@ -251,7 +251,7 @@
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_matebox_name'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_matebox1_name'))]"
             }
           ]
         }
@@ -260,10 +260,10 @@
     {
       "type": "Microsoft.Compute/virtualMachines/extensions",
       "apiVersion": "2024-11-01",
-      "name": "[concat(parameters('virtualMachines_matebox_name'), '/CustomScript')]",
+      "name": "[concat(parameters('virtualMachines_matebox1_name'), '/CustomScript')]",
       "location": "uksouth",
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachines_matebox_name'))]"
+        "[resourceId('Microsoft.Compute/virtualMachines', parameters('virtualMachines_matebox1_name'))]"
       ],
       "properties": {
         "autoUpgradeMinorVersion": true,
@@ -437,10 +437,10 @@
     {
       "type": "Microsoft.Network/networkInterfaces",
       "apiVersion": "2024-07-01",
-      "name": "[parameters('networkInterfaces_matebox_name')]",
+      "name": "[parameters('networkInterfaces_matebox1_name')]",
       "location": "uksouth",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_linuxboxpip_name'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_linuxboxpip1_name'))]",
         "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_name'), 'default')]",
         "[resourceId('Microsoft.Network/networkSecurityGroups', parameters('networkSecurityGroups_defaultnsg_name'))]"
       ],
@@ -448,14 +448,14 @@
       "properties": {
         "ipConfigurations": [
           {
-            "name": "[parameters('networkInterfaces_matebox_name')]",
-            "id": "[concat(resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_matebox_name')), concat('/ipConfigurations/', parameters('networkInterfaces_matebox_name')))]",
+            "name": "[parameters('networkInterfaces_matebox1_name')]",
+            "id": "[concat(resourceId('Microsoft.Network/networkInterfaces', parameters('networkInterfaces_matebox1_name')), concat('/ipConfigurations/', parameters('networkInterfaces_matebox1_name')))]",
             "type": "Microsoft.Network/networkInterfaces/ipConfigurations",
             "properties": {
               "privateIPAddress": "10.0.0.4",
               "privateIPAllocationMethod": "Dynamic",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_linuxboxpip_name'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIPAddresses_linuxboxpip1_name'))]"
               },
               "subnet": {
                 "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('virtualNetworks_vnet_name'), 'default')]"
