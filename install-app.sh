@@ -1,23 +1,61 @@
 #!/bin/bash
+set -ex
 
-# Script to silently install and start the todo web app on the virtual machine. 
-# Note that all commands bellow are without sudo - that's because extention mechanism 
-# runs scripts under root user. 
+APP_SRC="/tmp/azure_task_12_src"
+APP_DST="/app"
 
-# install system updates and isntall python3-pip package using apt. '-yq' flags are 
-# used to suppress any interactive prompts - we won't be able to confirm operation 
-# when running the script as VM extention.  
+# ---------------------------
+# Install system dependencies
+# ---------------------------
 apt-get update -yq
-apt-get install python3-pip -yq
+apt-get install -yq git python3-pip curl
 
-# Create a directory for the app and download the files. 
-mkdir /app 
-# make sure to uncomment the line bellow and update the link with your GitHub username
-# git clone https://github.com/<your-gh-username>/azure_task_12_deploy_app_with_vm_extention.git
-cp -r azure_task_12_deploy_app_with_vm_extention/app/* /app
+# ---------------------------
+# Clone or update repo
+# ---------------------------
+if [ -d "$APP_SRC/.git" ]; then
+    git -C "$APP_SRC" pull
+else
+    rm -rf "$APP_SRC"
+    git clone https://github.com/LitvinchukRoman/azure_task_12_deploy_app_with_vm_extention.git "$APP_SRC"
+fi
 
-# create a service for the app via systemctl and start the app
-mv /app/todoapp.service /etc/systemd/system/
+# ---------------------------
+# Copy app files
+# ---------------------------
+mkdir -p "$APP_DST"
+cp -r "$APP_SRC/app/"* "$APP_DST/"
+
+# ---------------------------
+# Python dependencies
+# ---------------------------
+if [ -f "$APP_DST/requirements.txt" ]; then
+    pip3 install -r "$APP_DST/requirements.txt"
+fi
+
+# ---------------------------
+# Systemd service
+# ---------------------------
+cp "$APP_DST/todoapp.service" /etc/systemd/system/
 systemctl daemon-reload
-systemctl start todoapp
-systemctl enable todoapp
+systemctl enable --now todoapp
+
+# ---------------------------
+# Verify service is running
+# ---------------------------
+systemctl is-active --quiet todoapp || { echo "❌ todoapp service is not active"; exit 1; }
+
+# ---------------------------
+# Verify app listens on port 8080
+# ---------------------------
+for i in {1..5}; do
+    if ss -ltn | grep -q ':8080'; then
+        echo "✅ App is listening on port 8080"
+        exit 0
+    fi
+    echo "Waiting for app to start..."
+    sleep 5
+done
+
+echo "❌ App did not start on port 8080"
+exit 1
