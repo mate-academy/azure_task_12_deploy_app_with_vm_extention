@@ -26,7 +26,7 @@ New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroup
 
 New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey $sshKeyPublicKey
 
-New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Basic -AllocationMethod Dynamic -DomainNameLabel $dnsLabel
+New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Standard -AllocationMethod Static -DomainNameLabel $dnsLabel
 
 New-AzVm `
 -ResourceGroupName $resourceGroupName `
@@ -40,3 +40,17 @@ New-AzVm `
 -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
 # ↓↓↓ Write your code here ↓↓↓
+
+# Define the URL for the install-app.sh script from your GitHub repository
+$scriptUrl = "https://raw.githubusercontent.com/demon9709/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
+
+# Set the VM extension to run the install-app.sh script
+Set-AzVMExtension `
+  -ResourceGroupName $resourceGroupName `
+  -VMName $vmName `
+  -Location $location `
+  -Name "CustomScriptExtension" `
+  -Publisher "Microsoft.Azure.Extensions" `
+  -ExtensionType "CustomScript" `
+  -TypeHandlerVersion "2.0" `
+  -Settings @{ "fileUris" = @($scriptUrl); "commandToExecute" = "sh install-app.sh" }
