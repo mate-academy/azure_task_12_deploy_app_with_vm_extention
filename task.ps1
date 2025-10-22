@@ -40,3 +40,17 @@ New-AzVm `
 -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
 # ↓↓↓ Write your code here ↓↓↓
+
+$vm = Get-AzVM -ResourceGroupName $resourceGroupName -Name $vmName
+
+$scriptUrl = "https://raw.githubusercontent.com/Chornoknysh/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
+
+Set-AzVMExtension `
+  -ResourceGroupName $resourceGroupName `
+  -VMName $vmName `
+  -Name "installTodoAppExtension" `
+  -Publisher "Microsoft.Azure.Extensions" `
+  -ExtensionType "CustomScript" `
+  -TypeHandlerVersion "2.1" `
+  -Location $location `
+  -SettingString ("{`"fileUris`":[`"$scriptUrl`"],`"commandToExecute`":`"bash install-app.sh`"}")
