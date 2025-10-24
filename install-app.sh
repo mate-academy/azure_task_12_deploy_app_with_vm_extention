@@ -1,23 +1,27 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euxo pipefail
+export DEBIAN_FRONTEND=noninteractive
 
-# Script to silently install and start the todo web app on the virtual machine. 
-# Note that all commands bellow are without sudo - that's because extention mechanism 
-# runs scripts under root user. 
-
-# install system updates and isntall python3-pip package using apt. '-yq' flags are 
-# used to suppress any interactive prompts - we won't be able to confirm operation 
-# when running the script as VM extention.  
+# 1) Пакети
 apt-get update -yq
-apt-get install python3-pip -yq
+apt-get install -yq git python3-pip
 
-# Create a directory for the app and download the files. 
-mkdir /app 
-# make sure to uncomment the line bellow and update the link with your GitHub username
-# git clone https://github.com/<your-gh-username>/azure_task_12_deploy_app_with_vm_extention.git
-cp -r azure_task_12_deploy_app_with_vm_extention/app/* /app
+# 2) Директория додатку
+mkdir -p /app
 
-# create a service for the app via systemctl and start the app
-mv /app/todoapp.service /etc/systemd/system/
+# 3) Клон твоєї репи у /tmp
+TMP_DIR=/tmp/todoapp
+rm -rf "$TMP_DIR"
+git clone --depth 1 https://github.com/VitaliySemeniv/azure_task_12_deploy_app_with_vm_extention.git "$TMP_DIR"
+
+# 4) Копіюємо файли у /app
+cp -r "$TMP_DIR/app/"* /app
+
+# 5) Встановлюємо залежності (без --break-system-packages)
+python3 -m pip install -r /app/requirements.txt
+
+# 6) systemd сервіс
+cp /app/todoapp.service /etc/systemd/system/todoapp.service
 systemctl daemon-reload
-systemctl start todoapp
 systemctl enable todoapp
+systemctl start todoapp
