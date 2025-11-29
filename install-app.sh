@@ -1,23 +1,53 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Script to silently install and start the todo web app on the virtual machine. 
-# Note that all commands bellow are without sudo - that's because extention mechanism 
-# runs scripts under root user. 
+LOG_FILE="/var/log/install-todo-app.log"
 
-# install system updates and isntall python3-pip package using apt. '-yq' flags are 
-# used to suppress any interactive prompts - we won't be able to confirm operation 
-# when running the script as VM extention.  
-apt-get update -yq
-apt-get install python3-pip -yq
+log() {
+  echo "[install-app] $1" | tee -a "$LOG_FILE"
+}
 
-# Create a directory for the app and download the files. 
-mkdir /app 
-# make sure to uncomment the line bellow and update the link with your GitHub username
-# git clone https://github.com/<your-gh-username>/azure_task_12_deploy_app_with_vm_extention.git
-cp -r azure_task_12_deploy_app_with_vm_extention/app/* /app
+log "Start install script"
 
-# create a service for the app via systemctl and start the app
-mv /app/todoapp.service /etc/systemd/system/
-systemctl daemon-reload
-systemctl start todoapp
-systemctl enable todoapp
+export DEBIAN_FRONTEND=noninteractive
+
+log "Updating package index..."
+apt-get update -y
+
+log "Installing required packages (git, python3, curl)..."
+apt-get install -y git python3 curl
+
+APP_DIR="/opt/azure-todo-app"
+REPO_URL="https://github.com/maximprysyazhnikov/azure_task_12_deploy_app_with_vm_extention.git"
+
+log "Preparing app directory ${APP_DIR}..."
+rm -rf "$APP_DIR"
+mkdir -p "$APP_DIR"
+
+log "Cloning repository ${REPO_URL}..."
+git clone "$REPO_URL" "$APP_DIR"
+
+cd "$APP_DIR/app"
+
+# Install pip if missing
+if ! command -v pip3 >/dev/null 2>&1; then
+  log "pip3 not found, installing via get-pip.py..."
+  curl -sS https://bootstrap.pypa.io/get-pip.py -o /tmp/get-pip.py
+  python3 /tmp/get-pip.py
+fi
+
+log "Installing Python dependencies from requirements.txt..."
+pip3 install --no-cache-dir -r requirements.txt
+
+log "Applying Django migrations..."
+python3 manage.py migrate --noinput
+
+log "Stopping any process on port 8080 (if any)..."
+if command -v fuser >/dev/null 2>&1; then
+  fuser -k 8080/tcp || true
+fi
+
+log "Starting Django todo app on port 8080..."
+nohup python3 manage.py runserver 0.0.0.0:8080 >> "$LOG_FILE" 2>&1 &
+
+log "Install script finished successfully"
