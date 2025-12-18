@@ -21,7 +21,7 @@ git clone --depth 1 "${REPO_URL}" "${REPO_DIR}"
 
 echo "[3/7] Validate repo structure"
 if [ ! -d "${REPO_DIR}/app" ]; then
-  echo "ERROR: '${REPO_DIR}/app' not found. Repo must contain '/app' folder."
+  echo "ERROR: '${REPO_DIR}/app' not found. Repo must contain 'app' folder."
   ls -la "${REPO_DIR}" || true
   exit 1
 fi
