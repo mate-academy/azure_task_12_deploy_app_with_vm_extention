@@ -60,10 +60,14 @@ $publisher = "Microsoft.Azure.Extensions"
 $extType = "CustomScript"
 $handlerVersion = "2.1"
 
-# ВАЖНО: файл должен реально существовать в ветке main на GitHub
-$installScriptUrl = "https://raw.githubusercontent.com/KyryloKilin/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
+# 1) гарантируем, что берём коммит, который УЖЕ на GitHub (origin/develop)
+git fetch origin | Out-Null
+$commit = (git rev-parse origin/develop).Trim()
 
-# Удалим extension, если была (чтобы не мешали старые попытки)
+# 2) скачиваем install-app.sh именно из этого коммита (кеш не мешает)
+$installScriptUrl = "https://raw.githubusercontent.com/KyryloKilin/azure_task_12_deploy_app_with_vm_extention/$commit/install-app.sh"
+
+# 3) удаляем прошлую extension (если была)
 Remove-AzVMExtension `
   -ResourceGroupName $resourceGroupName `
   -VMName $vmName `
@@ -71,12 +75,19 @@ Remove-AzVMExtension `
   -Force `
   -ErrorAction SilentlyContinue | Out-Null
 
+# 4) В CustomScript лучше так:
+#    fileUris -> Settings
+#    commandToExecute -> ProtectedSettings
 $settings = @{
   fileUris = @($installScriptUrl)
-  commandToExecute = "bash ./install-app.sh"
+}
+
+$protectedSettings = @{
+  commandToExecute = "bash install-app.sh"
 }
 
 Write-Host "Installing VM extension (Custom Script) to deploy app..."
+
 Set-AzVMExtension `
   -ResourceGroupName $resourceGroupName `
   -VMName $vmName `
@@ -86,8 +97,8 @@ Set-AzVMExtension `
   -TypeHandlerVersion $handlerVersion `
   -Location $location `
   -Settings $settings `
+  -ProtectedSettings $protectedSettings `
   -ForceRerun ([Guid]::NewGuid().ToString()) `
   -Verbose | Out-Null
 
 Write-Host "Extension deployed. App should be available soon on: http://$dnsLabel.$location.cloudapp.azure.com:8080"
-
