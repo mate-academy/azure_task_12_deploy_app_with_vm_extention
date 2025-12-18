@@ -55,20 +55,15 @@ New-AzVm `
 
 # ↓↓↓ Write your code here ↓↓↓
 
-$installScriptUrl = "https://raw.githubusercontent.com/KyryloKilin/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
-
-# ===== VM Extension: Custom Script =====
-
 $extName = "install-todo-app"
 $publisher = "Microsoft.Azure.Extensions"
 $extType = "CustomScript"
 $handlerVersion = "2.1"
 
-# ВАЖНО: берём текущий commit hash, чтобы GitHub точно отдал свежий файл без кеша
-$commit = (git rev-parse HEAD).Trim()
-$installScriptUrl = "https://raw.githubusercontent.com/KyryloKilin/azure_task_12_deploy_app_with_vm_extention/$commit/install-app.sh"
+# ВАЖНО: файл должен реально существовать в ветке main на GitHub
+$installScriptUrl = "https://raw.githubusercontent.com/KyryloKilin/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
 
-# На всякий: удаляем старую установку extension (если была)
+# Удалим extension, если была (чтобы не мешали старые попытки)
 Remove-AzVMExtension `
   -ResourceGroupName $resourceGroupName `
   -VMName $vmName `
@@ -78,7 +73,7 @@ Remove-AzVMExtension `
 
 $settings = @{
   fileUris = @($installScriptUrl)
-  commandToExecute = "bash install-app.sh"
+  commandToExecute = "bash ./install-app.sh"
 }
 
 Write-Host "Installing VM extension (Custom Script) to deploy app..."
@@ -95,3 +90,4 @@ Set-AzVMExtension `
   -Verbose | Out-Null
 
 Write-Host "Extension deployed. App should be available soon on: http://$dnsLabel.$location.cloudapp.azure.com:8080"
+
