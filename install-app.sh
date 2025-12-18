@@ -4,7 +4,8 @@ set -euo pipefail
 # VM Extension runs as root -> no sudo
 export DEBIAN_FRONTEND=noninteractive
 
-GITHUB_USER="KyryloKilin"
+: "${GITHUB_USER:?GITHUB_USER is not set (task.ps1 must pass it)}"
+
 REPO_NAME="azure_task_12_deploy_app_with_vm_extention"
 REPO_URL="https://github.com/${GITHUB_USER}/${REPO_NAME}.git"
 
