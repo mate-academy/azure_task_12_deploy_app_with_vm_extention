@@ -1,4 +1,4 @@
-$location = "uksouth"
+$location = "polandcentral"
 $resourceGroupName = "mate-azure-task-12"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -6,12 +6,17 @@ $subnetName = "default"
 $vnetAddressPrefix = "10.0.0.0/16"
 $subnetAddressPrefix = "10.0.0.0/24"
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
+$sshKeyPublicKey = (Get-Content -Raw "/root/.ssh/mate_azure_vm.pub").Trim() 
 $publicIpAddressName = "linuxboxpip"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
-$dnsLabel = "matetask" + (Get-Random -Count 1) 
+$sshKeyPublicKey = (Get-Content -Raw "/root/.ssh/mate_azure_vm.pub").Trim()
+$dnsLabel = ("matetask{0}" -f (Get-Random -Minimum 10000 -Maximum 99999)).ToLower()
+$adminUsername = "azureuser"
+$plainPassword = "P@ss" + (Get-Random -Minimum 10000000 -Maximum 99999999) + "aA!"
+$adminPassword = ConvertTo-SecureString $plainPassword -AsPlainText -Force
+$cred = New-Object System.Management.Automation.PSCredential ($adminUsername, $adminPassword)
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -26,17 +31,67 @@ New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroup
 
 New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey $sshKeyPublicKey
 
-New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Basic -AllocationMethod Dynamic -DomainNameLabel $dnsLabel
+New-AzPublicIpAddress `
+  -Name $publicIpAddressName `
+  -ResourceGroupName $resourceGroupName `
+  -Location $location `
+  -Sku Standard `
+  -AllocationMethod Static `
+  -IpAddressVersion IPv4 `
+  -DomainNameLabel $dnsLabel
 
 New-AzVm `
--ResourceGroupName $resourceGroupName `
--Name $vmName `
--Location $location `
--image $vmImage `
--size $vmSize `
--SubnetName $subnetName `
--VirtualNetworkName $virtualNetworkName `
--SecurityGroupName $networkSecurityGroupName `
--SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
+  -ResourceGroupName $resourceGroupName `
+  -Name $vmName `
+  -Location $location `
+  -Image $vmImage `
+  -Size $vmSize `
+  -SubnetName $subnetName `
+  -VirtualNetworkName $virtualNetworkName `
+  -SecurityGroupName $networkSecurityGroupName `
+  -SshKeyName $sshKeyName `
+  -PublicIpAddressName $publicIpAddressName `
+  -Credential $cred
 
 # ↓↓↓ Write your code here ↓↓↓
+
+$installScriptUrl = "https://raw.githubusercontent.com/KyryloKilin/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
+
+# ===== VM Extension: Custom Script =====
+
+$extName = "install-todo-app"
+$publisher = "Microsoft.Azure.Extensions"
+$extType = "CustomScript"
+$handlerVersion = "2.1"
+
+# ВАЖНО: берём текущий commit hash, чтобы GitHub точно отдал свежий файл без кеша
+$commit = (git rev-parse HEAD).Trim()
+$installScriptUrl = "https://raw.githubusercontent.com/KyryloKilin/azure_task_12_deploy_app_with_vm_extention/$commit/install-app.sh"
+
+# На всякий: удаляем старую установку extension (если была)
+Remove-AzVMExtension `
+  -ResourceGroupName $resourceGroupName `
+  -VMName $vmName `
+  -Name $extName `
+  -Force `
+  -ErrorAction SilentlyContinue | Out-Null
+
+$settings = @{
+  fileUris = @($installScriptUrl)
+  commandToExecute = "bash install-app.sh"
+}
+
+Write-Host "Installing VM extension (Custom Script) to deploy app..."
+Set-AzVMExtension `
+  -ResourceGroupName $resourceGroupName `
+  -VMName $vmName `
+  -Name $extName `
+  -Publisher $publisher `
+  -ExtensionType $extType `
+  -TypeHandlerVersion $handlerVersion `
+  -Location $location `
+  -Settings $settings `
+  -ForceRerun ([Guid]::NewGuid().ToString()) `
+  -Verbose | Out-Null
+
+Write-Host "Extension deployed. App should be available soon on: http://$dnsLabel.$location.cloudapp.azure.com:8080"
