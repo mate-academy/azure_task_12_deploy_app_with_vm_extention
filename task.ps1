@@ -55,19 +55,26 @@ New-AzVm `
 
 # ↓↓↓ Write your code here ↓↓↓
 
+# ===== VM Extension: Custom Script =====
 $extName = "install-todo-app"
 $publisher = "Microsoft.Azure.Extensions"
 $extType = "CustomScript"
 $handlerVersion = "2.1"
 
-# 1) гарантируем, что берём коммит, который УЖЕ на GitHub (origin/develop)
-git fetch origin | Out-Null
-$commit = (git rev-parse origin/develop).Trim()
+# 1) Динамически вытаскиваем username и repo из remote.origin.url
+$originUrl = (git config --get remote.origin.url).Trim()
 
-# 2) скачиваем install-app.sh именно из этого коммита (кеш не мешает)
-$installScriptUrl = "https://raw.githubusercontent.com/KyryloKilin/azure_task_12_deploy_app_with_vm_extention/$commit/install-app.sh"
+if ($originUrl -match "github\.com[:/](?<user>[^/]+)/(?<repo>[^/.]+)(\.git)?$") {
+  $githubUser = $Matches.user
+  $repoName = $Matches.repo
+} else {
+  throw "Cannot parse GitHub username/repo from origin url: $originUrl"
+}
 
-# 3) удаляем прошлую extension (если была)
+# 2) Требование задачи: ссылка ДОЛЖНА указывать на ветку main
+$installScriptUrl = "https://raw.githubusercontent.com/$githubUser/$repoName/main/install-app.sh"
+
+# 3) Удалим extension, если была (чтобы не мешали старые попытки)
 Remove-AzVMExtension `
   -ResourceGroupName $resourceGroupName `
   -VMName $vmName `
@@ -75,9 +82,7 @@ Remove-AzVMExtension `
   -Force `
   -ErrorAction SilentlyContinue | Out-Null
 
-# 4) В CustomScript лучше так:
-#    fileUris -> Settings
-#    commandToExecute -> ProtectedSettings
+# 4) Для CustomScript: fileUris -> Settings, commandToExecute -> ProtectedSettings
 $settings = @{
   fileUris = @($installScriptUrl)
 }
@@ -87,7 +92,6 @@ $protectedSettings = @{
 }
 
 Write-Host "Installing VM extension (Custom Script) to deploy app..."
-
 Set-AzVMExtension `
   -ResourceGroupName $resourceGroupName `
   -VMName $vmName `
@@ -102,3 +106,4 @@ Set-AzVMExtension `
   -Verbose | Out-Null
 
 Write-Host "Extension deployed. App should be available soon on: http://$dnsLabel.$location.cloudapp.azure.com:8080"
+
