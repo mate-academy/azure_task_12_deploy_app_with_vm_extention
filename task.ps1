@@ -49,10 +49,27 @@ $Params = @{
     ExtensionType      = 'CustomScript'
     TypeHandlerVersion = '2.1'
     ProtectedSettings  = @{
-        fileUris = @('https://raw.githubusercontent.com/mate-academy/azure_samples/main/7-azure-vm-advanced/vm-extention-sample-script.sh')
-        commandToExecute = './vm-extention-sample-script.sh'
+        fileUris = @('https://raw.githubusercontent.com/AkakinKakin/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh')
+        commandToExecute = './install-app.sh'
     }
 }
 
 Set-AzVMExtension @Params
 
+$storageName = "eldarstorage1"   # если занято — придумай другое
+
+New-AzStorageAccount `
+  -ResourceGroupName $resourceGroupName `
+  -Name $storageName `
+  -Location $location `
+  -SkuName Standard_LRS `
+  -Kind StorageV2
+
+$ctx = (Get-AzStorageAccount `
+  -ResourceGroupName $resourceGroupName `
+  -Name $storageName).Context
+
+New-AzStorageContainer `
+  -Name "task-artifacts" `
+  -Context $ctx `
+  -Permission Off
