@@ -1,5 +1,11 @@
-#! /bin/bash 
+#! /bin/bash
 
+cd "$(dirname "$0")"
+
+python3 -m venv venv
+source venv/bin/activate
+
+pip install --upgrade pip
 pip install -r requirements.txt
 python3 manage.py migrate
 python3 manage.py runserver 0.0.0.0:8080
