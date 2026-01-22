@@ -43,11 +43,11 @@ In this task, you will need to write and run a Powershell script, which deploys 
 
     The script already has code that deploys a VM. Update the code so it will deploy a web app from this repo using a custom script VM extension. 
 
-    - To deploy an extension, use [Set-AzVMExtention](https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/features-linux?tabs=azure-powershell#azure-powershell-1) commanded. 
+    - To deploy an extension, use [Set-AzVMExtention](https://learn.microsoft.com/en-us/azure/virtual-machines/extensions/features-linux?tabs=azure-powershell#azure-powershell-1) commanded.
 
     - Extention should run a script `install-app.sh`, which should be loaded from your fork of this repo. In your form, the script will be available by the URL: `https://raw.githubusercontent.com/<your-github-username>/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh`
 
-    - Make sure to review and update the script `install-app.sh`—it should clone your fork of this repo to the VM. Take note that as `install-app.sh` will be downloaded by your VM from GitHub, you need to commit and push changes to it before running the Powershell code that deploys the extension. 
+    - Make sure to review and update the script `install-app.sh`—it should clone your fork of this repo to the VM. Take note that as `install-app.sh` will be downloaded by your VM from GitHub, you need to commit and push changes to it before running the Powershell code that deploys the extension.
 
 2. When the script is ready, run it to deploy resources to your subscription. Ensure that the script is working without errors and that the application is available on port 8080 after running the script. To verify that the web application is running, open in a web browser the following URL: `http://<your-public-ip-DNS-name>:8080`.
 

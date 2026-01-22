@@ -187,7 +187,7 @@ if ($virtualMachine.properties.storageProfile.imageReference.offer.Contains('ubu
     throw "Virtual Machine uses wrong OS image. Please make sure that your script creates a VM from image with friendly name 'Ubuntu2204' and try again." 
 }
 
-if ($virtualMachine.properties.hardwareProfile.vmSize -eq "Standard_B1s") { 
+if ($virtualMachine.properties.hardwareProfile.vmSize -eq "Standard_B2ats_v2") { 
     Write-Output "`u{2705} Checked Virtual Machine size - OK"
 } else { 
     Write-Output `u{1F914}
@@ -207,7 +207,7 @@ if ($extention) {
     throw "Unable to find VM extention resource in the task resource group. Please make sure that your script creates a VM extention and try again."
 }
 
-if ($extention.properties.type -eq "CustomScript") { 
+if ($extention.properties.type -eq "CustomScript") {
     Write-Output "`u{2705} Checked the VM extention type - OK."
 } else { 
     Write-Output `u{1F914}
