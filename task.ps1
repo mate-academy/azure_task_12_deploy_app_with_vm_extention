@@ -1,4 +1,4 @@
-$location = "uksouth"
+$location = "canadacentral"
 $resourceGroupName = "mate-azure-task-12"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -6,12 +6,12 @@ $subnetName = "default"
 $vnetAddressPrefix = "10.0.0.0/16"
 $subnetAddressPrefix = "10.0.0.0/24"
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
+$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub"
 $publicIpAddressName = "linuxboxpip"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
-$vmSize = "Standard_B1s"
-$dnsLabel = "matetask" + (Get-Random -Count 1) 
+$vmSize = "Standard_B2ats_v2"
+$dnsLabel = "matetask" + (Get-Random -Count 1)
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -26,17 +26,30 @@ New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroup
 
 New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey $sshKeyPublicKey
 
-New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Basic -AllocationMethod Dynamic -DomainNameLabel $dnsLabel
+New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -AllocationMethod "Static" -DomainNameLabel $dnsLabel
 
 New-AzVm `
--ResourceGroupName $resourceGroupName `
--Name $vmName `
--Location $location `
--image $vmImage `
--size $vmSize `
--SubnetName $subnetName `
--VirtualNetworkName $virtualNetworkName `
--SecurityGroupName $networkSecurityGroupName `
--SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
+    -ResourceGroupName $resourceGroupName `
+    -Name $vmName `
+    -Location $location `
+    -image $vmImage `
+    -size $vmSize `
+    -SubnetName $subnetName `
+    -VirtualNetworkName $virtualNetworkName `
+    -SecurityGroupName $networkSecurityGroupName `
+    -SshKeyName $sshKeyName `
+    -PublicIpAddressName $publicIpAddressName
 
 # ↓↓↓ Write your code here ↓↓↓
+
+Set-AzVMExtension `
+    -ResourceGroupName $resourceGroupName `
+    -VMName $vmName `
+    -Publisher "Microsoft.Azure.Extensions" `
+    -ExtensionType "CustomScript" `
+    -Name "RunTodoApp" `
+    -TypeHandlerVersion "2.1" `
+    -ProtectedSettings @{
+        fileUris = @("https://raw.githubusercontent.com/vsupruniuk/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh")
+        commandToExecute = "./install-app.sh"
+    }
