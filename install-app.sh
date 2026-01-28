@@ -9,6 +9,7 @@
 # when running the script as VM extention.  
 apt-get update -yq
 apt-get install python3-pip -yq
+apt-get install git -yq
 
 # Create a directory for the app and download the files. 
 mkdir /app 
