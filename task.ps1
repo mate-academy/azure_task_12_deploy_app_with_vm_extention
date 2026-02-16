@@ -1,42 +1,55 @@
-$location = "uksouth"
-$resourceGroupName = "mate-azure-task-12"
-$networkSecurityGroupName = "defaultnsg"
-$virtualNetworkName = "vnet"
-$subnetName = "default"
-$vnetAddressPrefix = "10.0.0.0/16"
-$subnetAddressPrefix = "10.0.0.0/24"
-$sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
-$publicIpAddressName = "linuxboxpip"
-$vmName = "matebox"
-$vmImage = "Ubuntu2204"
+$location = "northcentralus"
+$resourceGroupName = "mate-task-12-final-passed"
+$vmName = "matebox-web"
 $vmSize = "Standard_B1s"
-$dnsLabel = "matetask" + (Get-Random -Count 1) 
+$vmImage = "Ubuntu2204"
+$sshKeyName = "linuxboxsshkey"
 
-Write-Host "Creating a resource group $resourceGroupName ..."
-New-AzResourceGroup -Name $resourceGroupName -Location $location
+$githubUsername = "d4vp4"
+$scriptUrl = "https://raw.githubusercontent.com/$githubUsername/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
+$dnsLabel = "d4vp4-final-" + (Get-Random -Minimum 1000 -Maximum 9999)
 
-Write-Host "Creating a network security group $networkSecurityGroupName ..."
-$nsgRuleSSH = New-AzNetworkSecurityRuleConfig -Name SSH  -Protocol Tcp -Direction Inbound -Priority 1001 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 22 -Access Allow;
-$nsgRuleHTTP = New-AzNetworkSecurityRuleConfig -Name HTTP  -Protocol Tcp -Direction Inbound -Priority 1002 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 8080 -Access Allow;
-New-AzNetworkSecurityGroup -Name $networkSecurityGroupName -ResourceGroupName $resourceGroupName -Location $location -SecurityRules $nsgRuleSSH, $nsgRuleHTTP
+New-AzResourceGroup -Name $resourceGroupName -Location $location -Force
 
-$subnet = New-AzVirtualNetworkSubnetConfig -Name $subnetName -AddressPrefix $subnetAddressPrefix
-New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroupName -Location $location -AddressPrefix $vnetAddressPrefix -Subnet $subnet
+Write-Host "Creating SSH Key resource..." -ForegroundColor Cyan
+New-AzSshKey -ResourceGroupName $resourceGroupName -Name $sshKeyName -Location $location
 
-New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey $sshKeyPublicKey
+$pip = New-AzPublicIpAddress -ResourceGroupName $resourceGroupName -Location $location `
+    -Name "web-pip" -AllocationMethod Static -Sku Standard -DomainNameLabel $dnsLabel
 
-New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Basic -AllocationMethod Dynamic -DomainNameLabel $dnsLabel
+$nsg = New-AzNetworkSecurityGroup -ResourceGroupName $resourceGroupName -Location $location -Name "web-nsg" -SecurityRules @(
+    New-AzNetworkSecurityRuleConfig -Name "SSH" -Protocol Tcp -Direction Inbound -Priority 1000 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 22 -Access Allow
+    New-AzNetworkSecurityRuleConfig -Name "Web8080" -Protocol Tcp -Direction Inbound -Priority 1010 -SourceAddressPrefix * -SourcePortRange * -DestinationAddressPrefix * -DestinationPortRange 8080 -Access Allow
+)
 
-New-AzVm `
--ResourceGroupName $resourceGroupName `
--Name $vmName `
--Location $location `
--image $vmImage `
--size $vmSize `
--SubnetName $subnetName `
--VirtualNetworkName $virtualNetworkName `
--SecurityGroupName $networkSecurityGroupName `
--SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
+$subnetConfig = New-AzVirtualNetworkSubnetConfig -Name "default" -AddressPrefix "10.0.0.0/24" -NetworkSecurityGroup $nsg
+$vnet = New-AzVirtualNetwork -ResourceGroupName $resourceGroupName -Location $location -Name "vnet" -AddressPrefix "10.0.0.0/16" -Subnet $subnetConfig
 
-# ↓↓↓ Write your code here ↓↓↓
+Write-Host "Creating VM ($vmSize)..." -ForegroundColor Yellow
+$cred = Get-Credential -UserName "azureuser" -Message "Введи пароль для VM"
+
+New-AzVM -ResourceGroupName $resourceGroupName `
+    -Name $vmName `
+    -Location $location `
+    -VirtualNetworkName "vnet" `
+    -SubnetName "default" `
+    -SecurityGroupName "web-nsg" `
+    -PublicIpAddressName "web-pip" `
+    -Image $vmImage `
+    -Size $vmSize `
+    -Credential $cred `
+    -SshKeyName $sshKeyName `
+    -OpenPorts 22, 8080
+
+Write-Host "Deploying Application..." -ForegroundColor Magenta
+Set-AzVMExtension -ResourceGroupName $resourceGroupName `
+    -Location $location `
+    -VMName $vmName `
+    -Name "InstallTodoApp" `
+    -Publisher "Microsoft.Azure.Extensions" `
+    -ExtensionType "CustomScript" `
+    -TypeHandlerVersion "2.1" `
+    -Settings @{
+        "fileUris" = @($scriptUrl);
+        "commandToExecute" = "bash install-app.sh"
+    }
