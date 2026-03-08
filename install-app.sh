@@ -1,6 +1,12 @@
 #!/bin/bash
 set -euo pipefail
 
+REPO_URL="${1:-}"
+if [ -z "$REPO_URL" ]; then
+  echo "Repository URL argument is required."
+  exit 1
+fi
+
 # Script to silently install and start the todo web app on the virtual machine. 
 # Note that all commands bellow are without sudo - that's because extention mechanism 
 # runs scripts under root user. 
@@ -15,7 +21,7 @@ apt-get install python3-pip git -yq
 rm -rf /app
 mkdir -p /app
 rm -rf /tmp/azure_task_12_deploy_app_with_vm_extention
-git clone https://github.com/TsykalanovDima/azure_task_12_deploy_app_with_vm_extention.git /tmp/azure_task_12_deploy_app_with_vm_extention
+git clone "$REPO_URL" /tmp/azure_task_12_deploy_app_with_vm_extention
 cp -r /tmp/azure_task_12_deploy_app_with_vm_extention/app/* /app
 chmod +x /app/start.sh
 

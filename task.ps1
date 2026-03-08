@@ -12,7 +12,21 @@ $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
 $dnsLabel = "matetask" + (Get-Random -Count 1) 
-$installScriptUrl = "https://raw.githubusercontent.com/TsykalanovDima/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
+
+$originUrl = (git config --get remote.origin.url).Trim()
+if (-not $originUrl) {
+    throw "Unable to read git remote origin URL. Please run script from your forked repository."
+}
+
+$repoMatch = [regex]::Match($originUrl, "github\.com[:/](?<owner>[^/]+)/(?<repo>[^/.]+)(\.git)?$")
+if (-not $repoMatch.Success) {
+    throw "Unable to parse GitHub owner/repo from origin URL: $originUrl"
+}
+
+$githubOwner = $repoMatch.Groups["owner"].Value
+$githubRepo = $repoMatch.Groups["repo"].Value
+$repoCloneUrl = "https://github.com/$githubOwner/$githubRepo.git"
+$installScriptUrl = "https://raw.githubusercontent.com/$githubOwner/$githubRepo/main/install-app.sh"
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -44,7 +58,7 @@ New-AzVm `
 Write-Host "Deploying custom script VM extension ..."
 $extensionSettings = @{
     fileUris         = @($installScriptUrl)
-    commandToExecute = "bash install-app.sh"
+    commandToExecute = "bash install-app.sh $repoCloneUrl"
 }
 
 Set-AzVMExtension `
