@@ -12,6 +12,7 @@ $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
 $dnsLabel = "matetask" + (Get-Random -Count 1) 
+$installScriptUrl = "https://raw.githubusercontent.com/TsykalanovDima/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -40,3 +41,18 @@ New-AzVm `
 -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
 # ↓↓↓ Write your code here ↓↓↓
+Write-Host "Deploying custom script VM extension ..."
+$extensionSettings = @{
+    fileUris         = @($installScriptUrl)
+    commandToExecute = "bash install-app.sh"
+}
+
+Set-AzVMExtension `
+-ResourceGroupName $resourceGroupName `
+-VMName $vmName `
+-Name "customScript" `
+-Publisher "Microsoft.Azure.Extensions" `
+-ExtensionType "CustomScript" `
+-TypeHandlerVersion "2.1" `
+-Location $location `
+-SettingString ($extensionSettings | ConvertTo-Json -Compress)
