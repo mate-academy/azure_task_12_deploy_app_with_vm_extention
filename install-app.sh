@@ -1,23 +1,27 @@
 #!/bin/bash
 
-# Script to silently install and start the todo web app on the virtual machine. 
-# Note that all commands bellow are without sudo - that's because extention mechanism 
-# runs scripts under root user. 
-
-# install system updates and isntall python3-pip package using apt. '-yq' flags are 
-# used to suppress any interactive prompts - we won't be able to confirm operation 
-# when running the script as VM extention.  
+# 1. Оновлення та встановлення git (важливо для клонування)
 apt-get update -yq
-apt-get install python3-pip -yq
+apt-get install python3-pip git -yq
 
-# Create a directory for the app and download the files. 
-mkdir /app 
-# make sure to uncomment the line bellow and update the link with your GitHub username
-# git clone https://github.com/<your-gh-username>/azure_task_12_deploy_app_with_vm_extention.git
-cp -r azure_task_12_deploy_app_with_vm_extention/app/* /app
+# 2. Видаляємо стару папку, якщо вона є, і клонуємо репо заново
+rm -rf /tmp/my-repo
+git clone https://github.com/TongobashV/azure_task_12_deploy_app_with_vm_extention.git /tmp/my-repo
 
-# create a service for the app via systemctl and start the app
-mv /app/todoapp.service /etc/systemd/system/
-systemctl daemon-reload
-systemctl start todoapp
-systemctl enable todoapp
+# 3. Створюємо папку додатка
+mkdir -p /app
+
+# 4. Копіюємо файли з ТИМЧАСОВОЇ папки, куди ми щойно клонували репо
+cp -r /tmp/my-repo/app/* /app/
+
+# 5. Налаштування сервісу
+if [ -f "/app/todoapp.service" ]; then
+    mv /app/todoapp.service /etc/systemd/system/
+    systemctl daemon-reload
+    systemctl enable todoapp
+    systemctl start todoapp
+    echo "Application started successfully!"
+else
+    echo "Error: todoapp.service not found in /app"
+    exit 1
+fi
