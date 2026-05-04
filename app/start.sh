@@ -1,5 +1,4 @@
-#! /bin/bash 
-
-pip install -r requirements.txt
-python3 manage.py migrate
-python3 manage.py runserver 0.0.0.0:8080
+#!/bin/bash
+set -euo pipefail
+cd /app
+exec ./venv/bin/python manage.py runserver 0.0.0.0:8080
