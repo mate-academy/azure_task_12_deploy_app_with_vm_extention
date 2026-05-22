@@ -30,17 +30,24 @@ $nsgRuleSSH = New-AzNetworkSecurityRuleConfig `
     -Protocol Tcp `
     -Direction Inbound `
     -Priority 1001 `
-    -SourceAddressPrefix * `
-    -SourcePortRange * `
-    -DestinationAddressPrefix * `
-    -DestinationPortRange 22 `
-    -Access Allow
-
+    -SourceAddressPrefix "*" `
+    -SourcePortRange "*" `
+    -DestinationAddressPrefix "*" `
+    -DestinationPortRange 22 -Access Allow
+$nsgRuleHTTP = New-AzNetworkSecurityRuleConfig `
+    -Name "HTTP" `
+    -Protocol Tcp `
+    -Direction Inbound `
+    -Priority 1002 `
+    -SourceAddressPrefix "*" `
+    -SourcePortRange "*" `
+    -DestinationAddressPrefix "*" `
+    -DestinationPortRange 8080 -Access Allow
 $nsg = New-AzNetworkSecurityGroup `
     -Name $nsgName `
     -ResourceGroupName $resourceGroupName `
     -Location $location `
-    -SecurityRules $nsgRuleSSH `
+    -SecurityRules $nsgRuleSSH, $nsgRuleHTTP `
     -Force
 
 # ==================== VNET ====================
@@ -114,7 +121,8 @@ $vmConfig = Add-AzVMNetworkInterface `
 New-AzVM `
     -ResourceGroupName $resourceGroupName `
     -Location $location `
-    -VM $vmConfig
+    -VM $vmConfig `
+    -SshKeyName $sshKeyName
 
 # ==================== EXTENSION ====================
 $scriptUri = "https://raw.githubusercontent.com/Xandane/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
