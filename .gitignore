@@ -1,1 +1,50 @@
 temp/*
+# =====================
+# OS files
+# =====================
+.DS_Store
+Thumbs.db
+
+# =====================
+# Python / Django
+# =====================
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.log
+
+# virtual environments
+venv/
+.venv/
+env/
+
+# Django stuff
+*.pot
+*.pyc
+
+# =====================
+# Secrets / configs
+# =====================
+.env
+.env.*
+*.key
+*.pem
+
+# =====================
+# Azure / DevOps artifacts
+# =====================
+temp/
+exported-template.json
+*.publishsettings
+
+# =====================
+# IDE / editors
+# =====================
+.vscode/
+.idea/
+
+# =====================
+# test / cache
+# =====================
+.pytest_cache/
+.mypy_cache/
