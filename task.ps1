@@ -1,4 +1,4 @@
-$location = "uksouth"
+$location = "denmarkeast"
 $resourceGroupName = "mate-azure-task-12"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -26,7 +26,11 @@ New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroup
 
 New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey $sshKeyPublicKey
 
-New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Basic -AllocationMethod Dynamic -DomainNameLabel $dnsLabel
+New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Standard -AllocationMethod Static -DomainNameLabel $dnsLabel
+
+$adminUsername = "azureuser"
+$adminPassword = ConvertTo-SecureString ([System.Guid]::NewGuid().ToString() + "Aa1!") -AsPlainText -Force
+$vmCredential = New-Object System.Management.Automation.PSCredential ($adminUsername, $adminPassword)
 
 New-AzVm `
 -ResourceGroupName $resourceGroupName `
@@ -34,9 +38,25 @@ New-AzVm `
 -Location $location `
 -image $vmImage `
 -size $vmSize `
+-Credential $vmCredential `
 -SubnetName $subnetName `
 -VirtualNetworkName $virtualNetworkName `
 -SecurityGroupName $networkSecurityGroupName `
 -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
 # ↓↓↓ Write your code here ↓↓↓
+Write-Host "Deploying a custom script extension to install the web app ..."
+$Settings = @{
+    "fileUris"         = @("https://raw.githubusercontent.com/volodymyrlp/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh");
+    "commandToExecute" = "bash install-app.sh"
+}
+
+Set-AzVMExtension `
+-ResourceGroupName $resourceGroupName `
+-VMName $vmName `
+-Name "install-app" `
+-Publisher "Microsoft.Azure.Extensions" `
+-ExtensionType "CustomScript" `
+-TypeHandlerVersion "2.1" `
+-Settings $Settings `
+-Location $location
