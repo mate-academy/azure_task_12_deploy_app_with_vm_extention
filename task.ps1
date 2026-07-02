@@ -1,4 +1,4 @@
-$location = "uksouth"
+$location = "polandcentral"
 $resourceGroupName = "mate-azure-task-12"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -10,7 +10,7 @@ $sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub"
 $publicIpAddressName = "linuxboxpip"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
-$vmSize = "Standard_B1s"
+$vmSize = "Standard_B2ts_v2"
 $dnsLabel = "matetask" + (Get-Random -Count 1) 
 
 Write-Host "Creating a resource group $resourceGroupName ..."
@@ -26,7 +26,7 @@ New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroup
 
 New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey $sshKeyPublicKey
 
-New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Basic -AllocationMethod Dynamic -DomainNameLabel $dnsLabel
+New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Standard -AllocationMethod Static -DomainNameLabel $dnsLabel
 
 New-AzVm `
 -ResourceGroupName $resourceGroupName `
@@ -40,3 +40,19 @@ New-AzVm `
 -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
 # ↓↓↓ Write your code here ↓↓↓
+$githubUser = "dianahorban477-bot"
+
+# 2. Формируем прямую ссылку на скрипт в твоем репозитории
+$scriptUrl = "https://raw.githubusercontent.com/$githubUser/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
+
+$extensionParams = @{
+    ResourceGroupName   = $resourceGroupName
+    VMName              = $vmName
+    Name                = "app-installation"
+    Publisher           = "Microsoft.Azure.Extensions"
+    ExtensionType       = "CustomScript"
+    TypeHandlerVersion  = "2.1"
+    Location            = $location
+    SettingString       = "{`"fileUris`": [`"$scriptUrl`"], `"commandToExecute`": `"bash install-app.sh`"}"
+}
+Set-AzVMExtension @extensionParams
