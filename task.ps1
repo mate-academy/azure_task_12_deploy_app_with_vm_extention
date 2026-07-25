@@ -6,11 +6,11 @@ $subnetName = "default"
 $vnetAddressPrefix = "10.0.0.0/16"
 $subnetAddressPrefix = "10.0.0.0/24"
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
+$sshKeyPublicKey = Get-Content "$HOME/.ssh/mate.pub" -Raw
 $publicIpAddressName = "linuxboxpip"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
-$vmSize = "Standard_B1s"
+$vmSize = "Standard_D2as_v4"
 $dnsLabel = "matetask" + (Get-Random -Count 1) 
 
 Write-Host "Creating a resource group $resourceGroupName ..."
@@ -26,7 +26,9 @@ New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroup
 
 New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey $sshKeyPublicKey
 
-New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Basic -AllocationMethod Dynamic -DomainNameLabel $dnsLabel
+New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Standard -AllocationMethod Static -DomainNameLabel $dnsLabel
+
+$vmCredential = New-Object System.Management.Automation.PSCredential ("azureuser", (ConvertTo-SecureString ((New-Guid).Guid + "Aa1!") -AsPlainText -Force))
 
 New-AzVm `
 -ResourceGroupName $resourceGroupName `
@@ -37,6 +39,25 @@ New-AzVm `
 -SubnetName $subnetName `
 -VirtualNetworkName $virtualNetworkName `
 -SecurityGroupName $networkSecurityGroupName `
--SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
+-SshKeyName $sshKeyName `
+-PublicIpAddressName $publicIpAddressName `
+-SecurityType "Standard" `
+-Credential $vmCredential
 
 # ↓↓↓ Write your code here ↓↓↓
+
+Write-Host "Deploying the CustomScript extension to install the app ..."
+$publicSettings = @{
+    "fileUris" = @("https://raw.githubusercontent.com/Baranotik15/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh")
+    "commandToExecute" = "bash install-app.sh"
+}
+
+Set-AzVMExtension `
+-ResourceGroupName $resourceGroupName `
+-VMName $vmName `
+-Location $location `
+-Name "CustomScript" `
+-Publisher "Microsoft.Azure.Extensions" `
+-ExtensionType "CustomScript" `
+-TypeHandlerVersion "2.1" `
+-Settings $publicSettings
