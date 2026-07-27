@@ -1,6 +1,8 @@
 #!/bin/bash
+set -euo pipefail
 
-# Script to silently install and start the todo web app on the virtual machine. 
+cloud-init status --wait || true
+# Script to silently install and start the todo web app on the virtual machine.
 # Note that all commands bellow are without sudo - that's because extention mechanism 
 # runs scripts under root user. 
 
@@ -13,7 +15,7 @@ apt-get install python3-pip -yq
 # Create a directory for the app and download the files. 
 mkdir /app 
 # make sure to uncomment the line bellow and update the link with your GitHub username
-# git clone https://github.com/<your-gh-username>/azure_task_12_deploy_app_with_vm_extention.git
+git clone https://github.com/maxmlv/azure_task_12_deploy_app_with_vm_extention.git
 cp -r azure_task_12_deploy_app_with_vm_extention/app/* /app
 
 # create a service for the app via systemctl and start the app
