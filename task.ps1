@@ -1,4 +1,4 @@
-$location = "uksouth"
+$location = "denmarkeast"
 $resourceGroupName = "mate-azure-task-12"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -11,7 +11,10 @@ $publicIpAddressName = "linuxboxpip"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
-$dnsLabel = "matetask" + (Get-Random -Count 1) 
+$dnsLabel = "matetask" + (Get-Random -Count 1)
+$adminUsername = "azureuser"
+$adminPassword = ConvertTo-SecureString (New-Guid).Guid -AsPlainText -Force
+$cred = New-Object System.Management.Automation.PSCredential ($adminUsername, $adminPassword)
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -28,6 +31,18 @@ New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey 
 
 New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Basic -AllocationMethod Dynamic -DomainNameLabel $dnsLabel
 
+$Params = @{
+    ResourceGroupName  = $resourceGroupName
+    VMName             = $vmName
+    Name               = $vmName
+    Publisher          = 'Microsoft.Azure.Extensions'
+    ExtensionType      = 'CustomScript'
+    TypeHandlerVersion = '2.1'
+    Settings          = @{fileUris = @('https://raw.githubusercontent.com/Anastasiia-Chikrizova/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh'); commandToExecute = './install-app.sh'}
+}
+
+
+
 New-AzVm `
 -ResourceGroupName $resourceGroupName `
 -Name $vmName `
@@ -37,6 +52,8 @@ New-AzVm `
 -SubnetName $subnetName `
 -VirtualNetworkName $virtualNetworkName `
 -SecurityGroupName $networkSecurityGroupName `
--SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
+-SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName `
+-Credential $cred
 
-# ↓↓↓ Write your code here ↓↓↓
+
+Set-AzVMExtension @Params
