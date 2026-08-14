@@ -214,14 +214,14 @@ if ($extention.properties.type -eq "CustomScript") {
     throw "Unable to verify the extention type. Please make sure that you are using a VM extention with type 'CustomScript' and try again."
 }
 
-if ($extention.properties.settings.fileUris[0]) { 
-    if (-not $extention.properties.settings.fileUris[0].Contains("https://raw.githubusercontent.com/mate-academy/")) { 
+if ($extention.properties.settings.fileUris[0]) {
+    if (-not $extention.properties.settings.fileUris[0].Contains("https://raw.githubusercontent.com/mate-academy/")) {
         Write-Output "`u{2705} Checked the VM extention script URI - OK."
-    } else { 
+    } else {
         Write-Output `u{1F914}
         throw "Unable to verify the script URL in the extention settings. Please make sure that you are using script from your own fork for the extention and try again."
     }
- } else { 
+ } else {
     Write-Output `u{1F914}
     throw "Unable to verify the script URL in the extention settings. Please make sure that you are setting the script URI when deploying the extention."
 }
