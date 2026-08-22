@@ -8,16 +8,16 @@
 # used to suppress any interactive prompts - we won't be able to confirm operation 
 # when running the script as VM extention.  
 apt-get update -yq
-apt-get install python3-pip -yq
+apt-get install -yq git python3 python3-venv
 
-# Create a directory for the app and download the files. 
-mkdir /app 
-# make sure to uncomment the line bellow and update the link with your GitHub username
-# git clone https://github.com/<your-gh-username>/azure_task_12_deploy_app_with_vm_extention.git
+git clone https://github.com/prostoponchik/azure_task_12_deploy_app_with_vm_extention.git
+
+mkdir -p /app
 cp -r azure_task_12_deploy_app_with_vm_extention/app/* /app
 
-# create a service for the app via systemctl and start the app
+python3 -m venv /app/.venv
+
 mv /app/todoapp.service /etc/systemd/system/
 systemctl daemon-reload
-systemctl start todoapp
-systemctl enable todoapp
+systemctl enable --now todoapp
+
