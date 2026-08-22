@@ -20,3 +20,4 @@ python3 -m venv /app/.venv
 mv /app/todoapp.service /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable --now todoapp
+

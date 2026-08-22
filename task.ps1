@@ -11,8 +11,9 @@ $publicIpAddressName = "linuxboxpip"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
-$dnsLabel = "matetask" + (Get-Random -Count 1)
+$dnsLabel = "prostoponchik-matebox-12"
 $customScriptName = "todoapp"
+$vmAdminUsername = "ponchik"
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -27,7 +28,7 @@ New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroup
 
 New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey $sshKeyPublicKey
 
-New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Basic -AllocationMethod Dynamic -DomainNameLabel $dnsLabel
+New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -AllocationMethod Static -DomainNameLabel $dnsLabel
 
 New-AzVm `
   -ResourceGroupName $resourceGroupName `
@@ -38,7 +39,9 @@ New-AzVm `
   -SubnetName $subnetName `
   -VirtualNetworkName $virtualNetworkName `
   -SecurityGroupName $networkSecurityGroupName `
-  -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
+  -SshKeyName $sshKeyName `
+  -PublicIpAddressName $publicIpAddressName `
+  -Credential (New-Object System.Management.Automation.PSCredential($vmAdminUsername, (New-Object System.Security.SecureString)))
 
 # ↓↓↓ Write your code here ↓↓↓
 
