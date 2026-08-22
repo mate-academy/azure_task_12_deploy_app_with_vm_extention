@@ -1,4 +1,4 @@
-$location = "uksouth"
+$location = "denmarkeast"
 $resourceGroupName = "mate-azure-task-12"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -11,7 +11,8 @@ $publicIpAddressName = "linuxboxpip"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
-$dnsLabel = "matetask" + (Get-Random -Count 1) 
+$dnsLabel = "matetask" + (Get-Random -Count 1)
+$customScriptName = "todoapp"
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -29,14 +30,29 @@ New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey 
 New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Basic -AllocationMethod Dynamic -DomainNameLabel $dnsLabel
 
 New-AzVm `
--ResourceGroupName $resourceGroupName `
--Name $vmName `
--Location $location `
--image $vmImage `
--size $vmSize `
--SubnetName $subnetName `
--VirtualNetworkName $virtualNetworkName `
--SecurityGroupName $networkSecurityGroupName `
--SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
+  -ResourceGroupName $resourceGroupName `
+  -Name $vmName `
+  -Location $location `
+  -image $vmImage `
+  -size $vmSize `
+  -SubnetName $subnetName `
+  -VirtualNetworkName $virtualNetworkName `
+  -SecurityGroupName $networkSecurityGroupName `
+  -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
 # ↓↓↓ Write your code here ↓↓↓
+
+$settings = @{
+  "fileUris"         = @("https://raw.githubusercontent.com/prostoponchik/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh")
+  "commandToExecute" = "bash install-app.sh"
+}
+
+Set-AzVmExtension `
+  -ResourceGroupName $resourceGroupName `
+  -VMName $vmName `
+  -Location $location `
+  -Name $customScriptName `
+  -Publisher "Microsoft.Azure.Extensions" `
+  -ExtensionType "CustomScript" `
+  -TypeHandlerVersion "2.1" `
+  -Settings $settings
