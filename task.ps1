@@ -1,5 +1,5 @@
-$location = "uksouth"
-$resourceGroupName = "mate-azure-task-12"
+$location = "denmarkeast"
+$resourceGroupName = "mate-resources"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
 $subnetName = "default"
@@ -26,7 +26,7 @@ New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroup
 
 New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey $sshKeyPublicKey
 
-New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Basic -AllocationMethod Dynamic -DomainNameLabel $dnsLabel
+New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Standard -AllocationMethod Static -DomainNameLabel $dnsLabel
 
 New-AzVm `
 -ResourceGroupName $resourceGroupName `
@@ -40,3 +40,29 @@ New-AzVm `
 -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
 # ↓↓↓ Write your code here ↓↓↓
+$Params = @{
+    ResourceGroupName  = "mate-resources"
+    VMName             = "matebox"
+    Name               = 'CustomScript'
+    Publisher          = 'Microsoft.Azure.Extensions'
+    ExtensionType      = 'CustomScript'
+    TypeHandlerVersion = '2.1'
+    Settings          = @{
+        fileUris = @('https://raw.githubusercontent.com/kdacc/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh')
+        commandToExecute = 'bash install-app.sh'
+    }
+}
+Set-AzVMExtension @Params
+
+$vm = Get-AzVM -ResourceGroupName $resourceGroupName -Name $vmName
+$extension = Get-AzVMExtension -ResourceGroupName $resourceGroupName -VMName $vmName -Name 'CustomScript'
+
+$result = [PSCustomObject]@{
+    VMName            = $vm.Name
+    Location          = $vm.Location
+    ProvisioningState = $vm.ProvisioningState
+    ExtensionStatus   = $extension.ProvisioningState
+    PublicUrl         = "http://$dnsLabel.$location.cloudapp.azure.com:8080"
+}
+
+$result | ConvertTo-Json | Out-File -FilePath "result.json"

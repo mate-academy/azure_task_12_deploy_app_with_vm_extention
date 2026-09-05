@@ -1,0 +1,7 @@
+{
+  "VMName": "matebox",
+  "Location": "denmarkeast",
+  "ProvisioningState": "Succeeded",
+  "ExtensionStatus": "Succeeded",
+  "PublicUrl": "http://matetask881612913.denmarkeast.cloudapp.azure.com:8080"
+}
