@@ -1,4 +1,4 @@
-$location = "uksouth"
+$location = "denmarkeast"
 $resourceGroupName = "mate-azure-task-12"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -11,7 +11,8 @@ $publicIpAddressName = "linuxboxpip"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
-$dnsLabel = "matetask" + (Get-Random -Count 1) 
+$dnsLabel = "matetask" + (Get-Random -Count 1)
+$vmAdminUsername = "azureuser"
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -26,7 +27,12 @@ New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroup
 
 New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey $sshKeyPublicKey
 
-New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Basic -AllocationMethod Dynamic -DomainNameLabel $dnsLabel
+# Basic public IP SKU is retired; Standard + Static is required for new deployments.
+New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Standard -AllocationMethod Static -DomainNameLabel $dnsLabel
+
+# Credential supplies the Linux admin username; authentication uses -SshKeyName (not password login).
+$securePassword = ConvertTo-SecureString "UnusedPassw0rd!" -AsPlainText -Force
+$credential = New-Object System.Management.Automation.PSCredential ($vmAdminUsername, $securePassword)
 
 New-AzVm `
 -ResourceGroupName $resourceGroupName `
@@ -37,6 +43,45 @@ New-AzVm `
 -SubnetName $subnetName `
 -VirtualNetworkName $virtualNetworkName `
 -SecurityGroupName $networkSecurityGroupName `
--SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
+-SshKeyName $sshKeyName `
+-PublicIpAddressName $publicIpAddressName `
+-Credential $credential
+
+# New-AzVm may replace NSG rules with a default SSH-only rule; ensure port 8080 stays open.
+Write-Host "Ensuring NSG allows inbound traffic on port 8080 ..."
+$nsg = Get-AzNetworkSecurityGroup -ResourceGroupName $resourceGroupName -Name $networkSecurityGroupName
+$hasHttpRule = $nsg.SecurityRules | Where-Object {
+    ($_.DestinationPortRange -eq "8080") -or ($_.DestinationPortRange -contains "8080")
+}
+if (-not $hasHttpRule) {
+    Add-AzNetworkSecurityRuleConfig `
+        -NetworkSecurityGroup $nsg `
+        -Name HTTP `
+        -Protocol Tcp `
+        -Direction Inbound `
+        -Priority 1002 `
+        -SourceAddressPrefix * `
+        -SourcePortRange * `
+        -DestinationAddressPrefix * `
+        -DestinationPortRange 8080 `
+        -Access Allow | Out-Null
+    Set-AzNetworkSecurityGroup -NetworkSecurityGroup $nsg | Out-Null
+}
 
 # ↓↓↓ Write your code here ↓↓↓
+$installScriptUri = "https://raw.githubusercontent.com/Petliuk/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
+$extensionSettings = @{
+    "fileUris"         = @($installScriptUri)
+    "commandToExecute" = "./install-app.sh"
+}
+
+Write-Host "Installing Custom Script VM extension..."
+Set-AzVMExtension `
+    -ResourceGroupName $resourceGroupName `
+    -VMName $vmName `
+    -Name "CustomScript" `
+    -Publisher "Microsoft.Azure.Extensions" `
+    -ExtensionType "CustomScript" `
+    -TypeHandlerVersion "2.1" `
+    -Location $location `
+    -Settings $extensionSettings
