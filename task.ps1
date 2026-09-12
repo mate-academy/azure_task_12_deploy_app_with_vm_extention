@@ -1,4 +1,4 @@
-$location = "southafricanorth"
+$location = "polandcentral"
 $resourceGroupName = "mate-azure-task-12"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -61,10 +61,9 @@ New-AzVm `
     -SecurityGroupName $networkSecurityGroupName `
     -SshKeyName $sshKeyName
 
-# ↓↓↓ Встановлення розширення VM Extension ↓↓↓
+# ↓↓↓ Встановлення розширення Custom Script Extension ↓↓↓
 Write-Host "Deploying Custom Script Extension to VM $vmName ..."
 
-# Ім'я користувача GitHub
 $githubUsername = "Nick-Ptrnko"
 
 $extensionSettings = @{
