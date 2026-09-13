@@ -1,4 +1,4 @@
-$location = "uksouth"
+$location = "westus2"
 $resourceGroupName = "mate-azure-task-12"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -10,7 +10,7 @@ $sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub"
 $publicIpAddressName = "linuxboxpip"
 $vmName = "matebox"
 $vmImage = "Ubuntu2204"
-$vmSize = "Standard_B1s"
+$vmSize = "Standard_B2ats_v2"
 $dnsLabel = "matetask" + (Get-Random -Count 1) 
 
 Write-Host "Creating a resource group $resourceGroupName ..."
@@ -39,4 +39,16 @@ New-AzVm `
 -SecurityGroupName $networkSecurityGroupName `
 -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
-# ↓↓↓ Write your code here ↓↓↓
+$githubUsername = "Klemjl"
+$scriptUrl = "https://raw.githubusercontent.com/$githubUsername/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
+
+Write-Host "Deploying custom script extension ..."
+Set-AzVMExtension `
+    -ResourceGroupName $resourceGroupName `
+    -VMName $vmName `
+    -Location $location `
+    -Name "customScript" `
+    -Publisher "Microsoft.Azure.Extensions" `
+    -ExtensionType "CustomScript" `
+    -TypeHandlerVersion "2.1" `
+    -Settings @{ "fileUris" = @($scriptUrl); "commandToExecute" = "bash install-app.sh" }
