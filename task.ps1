@@ -49,8 +49,8 @@ $Params = @{
     ExtensionType      = 'CustomScript'
     TypeHandlerVersion = '2.1'
     ProtectedSettings  = @{
-        fileUris = @('https://raw.githubusercontent.com/nook17n1/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh')
-        commandToExecute = 'bash install-app.sh'
+        fileUris = @('https://github.com/nook17n1/azure_task_12_deploy_app_with_vm_extention/blob/develop/install-app.sh')
+        commandToExecute = "bash -c 'sed -i s/\r$// install-app.sh && chmod +x install-app.sh && bash install-app.sh'"
     }
 }
 
