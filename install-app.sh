@@ -1,11 +1,12 @@
 #!/bin/bash
+set -e
 
 # Script to silently install and start the todo web app on the virtual machine.
 # Extension mechanism runs scripts as root, so sudo is not required.
 
 # Install system packages.
 apt-get update -yq
-apt-get install python3-pip -yq
+apt-get install python3-pip git -yq
 
 # Create a directory for the app.
 mkdir -p /app

@@ -72,6 +72,9 @@ New-AzPublicIpAddress `
     -AllocationMethod Static `
     -DomainNameLabel $dnsLabel
 
+$credential = Get-Credential -UserName "azureuser" -Message "Enter a password for the Azure VM"
+
+
 New-AzVm `
     -ResourceGroupName $resourceGroupName `
     -Name $vmName `
@@ -82,6 +85,7 @@ New-AzVm `
     -VirtualNetworkName $virtualNetworkName `
     -SecurityGroupName $networkSecurityGroupName `
     -SshKeyName $sshKeyName `
+    -Credential $credential `
     -PublicIpAddressName $publicIpAddressName
 
 Write-Host "Installing Custom Script Extension ..."
