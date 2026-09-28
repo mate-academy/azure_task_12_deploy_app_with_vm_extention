@@ -1,22 +1,26 @@
 #!/bin/bash
+set -e
 
-# Script to silently install and start the todo web app on the virtual machine. 
-# Note that all commands bellow are without sudo - that's because extention mechanism 
-# runs scripts under root user. 
+# Script to silently install and start the todo web app on the virtual machine.
+# Extension mechanism runs scripts as root, so sudo is not required.
 
-# install system updates and isntall python3-pip package using apt. '-yq' flags are 
-# used to suppress any interactive prompts - we won't be able to confirm operation 
-# when running the script as VM extention.  
+# Install system packages.
 apt-get update -yq
-apt-get install python3-pip -yq
+apt-get install python3-pip git -yq
 
-# Create a directory for the app and download the files. 
-mkdir /app 
-# make sure to uncomment the line bellow and update the link with your GitHub username
-# git clone https://github.com/<your-gh-username>/azure_task_12_deploy_app_with_vm_extention.git
+# Create a directory for the app.
+mkdir -p /app
+
+# Clone the application repository.
+git clone https://github.com/tetianamohorian23/azure_task_12_deploy_app_with_vm_extention.git
+
+# Copy application files.
 cp -r azure_task_12_deploy_app_with_vm_extention/app/* /app
 
-# create a service for the app via systemctl and start the app
+# Install Python dependencies.
+pip3 install -r /app/requirements.txt
+
+# Create and start the app service.
 mv /app/todoapp.service /etc/systemd/system/
 systemctl daemon-reload
 systemctl start todoapp
