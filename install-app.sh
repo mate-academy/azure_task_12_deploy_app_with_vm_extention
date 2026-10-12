@@ -1,23 +1,36 @@
 #!/bin/bash
+set -e
 
-# Script to silently install and start the todo web app on the virtual machine. 
-# Note that all commands bellow are without sudo - that's because extention mechanism 
-# runs scripts under root user. 
-
-# install system updates and isntall python3-pip package using apt. '-yq' flags are 
-# used to suppress any interactive prompts - we won't be able to confirm operation 
-# when running the script as VM extention.  
+# Install required system packages
 apt-get update -yq
-apt-get install python3-pip -yq
+apt-get install -yq git python3-pip python3-venv dos2unix
 
-# Create a directory for the app and download the files. 
-mkdir /app 
-# make sure to uncomment the line bellow and update the link with your GitHub username
-# git clone https://github.com/<your-gh-username>/azure_task_12_deploy_app_with_vm_extention.git
-cp -r azure_task_12_deploy_app_with_vm_extention/app/* /app
+# Clone your GitHub fork
+REPO_URL="https://github.com/Pugach-Nazar/azure_task_12_deploy_app_with_vm_extention.git"
+REPO_DIR="/tmp/azure_task_12_deploy_app_with_vm_extention"
+APP_DIR="/app"
 
-# create a service for the app via systemctl and start the app
-mv /app/todoapp.service /etc/systemd/system/
+rm -rf "$REPO_DIR"
+git clone --branch main "$REPO_URL" "$REPO_DIR"
+
+# Copy application files to /app
+mkdir -p "$APP_DIR"
+cp -r "$REPO_DIR/app/." "$APP_DIR/"
+
+# Convert Windows CRLF line endings to Linux LF
+find "$APP_DIR" -type f \( -name "*.sh" -o -name "*.service" \) \
+    -exec dos2unix {} \;
+
+# Create virtual environment
+python3 -m venv "$APP_DIR/.venv"
+
+# Install Python dependencies
+cd "$APP_DIR"
+"$APP_DIR/.venv/bin/pip" install -r requirements.txt
+
+# Install and start the systemd service
+install -m 644 "$APP_DIR/todoapp.service" \
+    /etc/systemd/system/todoapp.service
+
 systemctl daemon-reload
-systemctl start todoapp
-systemctl enable todoapp
+systemctl enable --now todoapp.service
