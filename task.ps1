@@ -13,6 +13,21 @@ $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
 $dnsLabel = "matetask" + (Get-Random -Count 1) 
 
+$originUrl = (git config --get remote.origin.url).Trim()
+if (-not $originUrl) {
+    throw "Unable to read git remote origin URL. Please run script from your forked repository."
+}
+
+$repoMatch = [regex]::Match($originUrl, "github\.com[:/](?<owner>[^/]+)/(?<repo>[^/.]+)(\.git)?$")
+if (-not $repoMatch.Success) {
+    throw "Unable to parse GitHub owner/repo from origin URL: $originUrl"
+}
+
+$githubOwner = $repoMatch.Groups["owner"].Value
+$githubRepo = $repoMatch.Groups["repo"].Value
+$repoCloneUrl = "https://github.com/$githubOwner/$githubRepo.git"
+$installScriptUrl = "https://raw.githubusercontent.com/$githubOwner/$githubRepo/main/install-app.sh"
+
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
 
@@ -40,3 +55,18 @@ New-AzVm `
 -SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
 
 # ↓↓↓ Write your code here ↓↓↓
+Write-Host "Deploying custom script VM extension ..."
+$extensionSettings = @{
+    fileUris         = @($installScriptUrl)
+    commandToExecute = "bash install-app.sh $repoCloneUrl"
+}
+
+Set-AzVMExtension `
+-ResourceGroupName $resourceGroupName `
+-VMName $vmName `
+-Name "customScript" `
+-Publisher "Microsoft.Azure.Extensions" `
+-ExtensionType "CustomScript" `
+-TypeHandlerVersion "2.1" `
+-Location $location `
+-SettingString ($extensionSettings | ConvertTo-Json -Compress)
