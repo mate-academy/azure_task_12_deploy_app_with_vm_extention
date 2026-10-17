@@ -9,10 +9,69 @@ REPOSITORY_BRANCH="azure-majlo"
 TEMP_DIRECTORY="/tmp/azure_task_12_deploy_app_with_vm_extention"
 APP_DIRECTORY="/app"
 
+wait_for_apt() {
+    echo "Waiting for other apt processes..."
+
+    while \
+        fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1 || \
+        fuser /var/lib/dpkg/lock >/dev/null 2>&1 || \
+        fuser /var/lib/apt/lists/lock >/dev/null 2>&1 || \
+        fuser /var/cache/apt/archives/lock >/dev/null 2>&1
+    do
+        sleep 5
+    done
+}
+
+echo "Updating package information..."
+
+update_success=false
+
+for attempt in 1 2 3 4 5
+do
+    wait_for_apt
+
+    echo "apt-get update attempt $attempt..."
+
+    if apt-get update \
+        -o APT::Update::Post-Invoke-Success::=
+    then
+        update_success=true
+        break
+    fi
+
+    echo "apt-get update failed. Retrying in 15 seconds..."
+    sleep 15
+done
+
+if [ "$update_success" != "true" ]; then
+    echo "Unable to update package information."
+    exit 1
+fi
+
 echo "Installing required packages..."
 
-apt-get update -yq
-apt-get install -yq python3-pip git
+install_success=false
+
+for attempt in 1 2 3 4 5
+do
+    wait_for_apt
+
+    echo "Package installation attempt $attempt..."
+
+    if apt-get install -yq python3-pip git
+    then
+        install_success=true
+        break
+    fi
+
+    echo "Package installation failed. Retrying in 15 seconds..."
+    sleep 15
+done
+
+if [ "$install_success" != "true" ]; then
+    echo "Unable to install required packages."
+    exit 1
+fi
 
 echo "Downloading application from GitHub..."
 
@@ -34,10 +93,11 @@ chmod +x "$APP_DIRECTORY/start.sh"
 
 echo "Configuring systemd service..."
 
-mv "$APP_DIRECTORY/todoapp.service" /etc/systemd/system/todoapp.service
+mv "$APP_DIRECTORY/todoapp.service" \
+    /etc/systemd/system/todoapp.service
 
 systemctl daemon-reload
 systemctl enable todoapp
-systemctl start todoapp
+systemctl restart todoapp
 
 echo "Application deployment completed."
