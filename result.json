@@ -1,0 +1,7 @@
+{
+  "applicationUrl": "http://matetask2035649265.uksouth.cloudapp.azure.com:8080",
+  "publicIpAddress": "172.167.46.32",
+  "vmName": "matebox",
+  "deploymentStatus": "Success",
+  "resourceGroupName": "mate-azure-task-12"
+}
