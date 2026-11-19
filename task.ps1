@@ -1,4 +1,4 @@
-$location = "westus2" # any region that is available in your Azure subscription
+$location = "denmarkeast" # any region that is available in your Azure subscription
 $resourceGroupName = "mate-azure-task-12"
 $networkSecurityGroupName = "defaultnsg"
 $virtualNetworkName = "vnet"
@@ -6,12 +6,13 @@ $subnetName = "default"
 $vnetAddressPrefix = "10.0.0.0/16"
 $subnetAddressPrefix = "10.0.0.0/24"
 $sshKeyName = "linuxboxsshkey"
-$sshKeyPublicKey = Get-Content "~/.ssh/id_rsa.pub" 
+$sshKeyPublicKey = (Get-Content "$HOME\.ssh\mate_azure_task2.pub" -Raw).Trim()
 $publicIpAddressName = "linuxboxpip"
 $vmName = "matebox"
+$vmCount = 2
 $vmImage = "Ubuntu2204"
 $vmSize = "Standard_B1s"
-$dnsLabel = "matetask" + (Get-Random -Count 1) 
+$dnsLabel = "matetask" + (Get-Random -Count 1)
 
 Write-Host "Creating a resource group $resourceGroupName ..."
 New-AzResourceGroup -Name $resourceGroupName -Location $location
@@ -26,17 +27,87 @@ New-AzVirtualNetwork -Name $virtualNetworkName -ResourceGroupName $resourceGroup
 
 New-AzSshKey -Name $sshKeyName -ResourceGroupName $resourceGroupName -PublicKey $sshKeyPublicKey
 
-New-AzPublicIpAddress -Name $publicIpAddressName -ResourceGroupName $resourceGroupName -Location $location -Sku Basic -AllocationMethod Dynamic -DomainNameLabel $dnsLabel
+for ($i = 1; $i -le $vmCount; $i++) {
 
-New-AzVm `
--ResourceGroupName $resourceGroupName `
--Name $vmName `
--Location $location `
--image $vmImage `
--size $vmSize `
--SubnetName $subnetName `
--VirtualNetworkName $virtualNetworkName `
--SecurityGroupName $networkSecurityGroupName `
--SshKeyName $sshKeyName  -PublicIpAddressName $publicIpAddressName
+    if ($i -eq 1) {
+        $currentVmName = $vmName
+        $currentIpName = $publicIpAddressName
+    }
+    else {
+        $currentVmName = "$vmName-$i"
+        $currentIpName = "$publicIpAddressName-$i"
+    }
+
+    $currentDns = "matetask$(Get-Random -Minimum 10000 -Maximum 99999)-$i"
+
+    $existingVm = Get-AzVM `
+        -ResourceGroupName $resourceGroupName `
+        -Name $currentVmName `
+        -ErrorAction SilentlyContinue
+
+    if (-not $existingVm) {
+
+        $existingIp = Get-AzPublicIpAddress `
+            -ResourceGroupName $resourceGroupName `
+            -Name $currentIpName `
+            -ErrorAction SilentlyContinue
+
+        if (-not $existingIp) {
+            New-AzPublicIpAddress `
+                -Name $currentIpName `
+                -ResourceGroupName $resourceGroupName `
+                -Location $location `
+                -Sku Standard `
+                -AllocationMethod Static `
+                -DomainNameLabel $currentDns `
+                -ErrorAction Stop
+        }
+
+        New-AzVM `
+            -ResourceGroupName $resourceGroupName `
+            -Name $currentVmName `
+            -Location $location `
+            -Image $vmImage `
+            -Size $vmSize `
+            -SubnetName $subnetName `
+            -VirtualNetworkName $virtualNetworkName `
+            -SecurityGroupName $networkSecurityGroupName `
+            -SshKeyName $sshKeyName `
+            -PublicIpAddressName $currentIpName `
+            -ErrorAction Stop
+    }
+}
 
 # ↓↓↓ Write your code here ↓↓↓
+$installScriptUri = "https://raw.githubusercontent.com/Khrystyna-tkach/azure_task_12_deploy_app_with_vm_extention/main/install-app.sh"
+for ($i = 1; $i -le $vmCount; $i++) {
+
+    if ($i -eq 1) {
+        $currentVmName = $vmName
+    }
+    else {
+        $currentVmName = "$vmName-$i"
+    }
+
+    $deployedVm = Get-AzVM `
+        -ResourceGroupName $resourceGroupName `
+        -Name $currentVmName `
+        -ErrorAction Stop
+
+    $Params = @{
+        ResourceGroupName = $resourceGroupName
+        VMName = $deployedVm.Name
+        Location = $deployedVm.Location
+        Name = 'CustomScript'
+        Publisher = 'Microsoft.Azure.Extensions'
+        ExtensionType = 'CustomScript'
+        TypeHandlerVersion = '2.1'
+        ProtectedSettings = @{
+            fileUris = @($installScriptUri)
+            commandToExecute = 'bash install-app.sh'
+        }
+    }
+
+    Set-AzVMExtension @Params -ErrorAction Stop
+}
+
